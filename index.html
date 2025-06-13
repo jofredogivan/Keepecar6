@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2c3e50">
+  <title>Keepecar6 - Controle de Veículos</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      padding: 0;
+      background-color: #f2f2f2;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    input, button, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      width: 100%;
+      height: 150px;
+    }
+    #loginContainer {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="loginContainer">
+    <h2>Login - Keepecar6</h2>
+    <input type="text" id="login" placeholder="Usuário">
+    <input type="password" id="senha" placeholder="Senha">
+    <button onclick="verificarLogin()">Entrar</button>
+  </div>
+
+  <div class="container" id="mainContainer" style="display:none;">
+    <h2>Keepecar6 - Controle de Veículos</h2>
+    <input type="text" id="responsavel" placeholder="Responsável">
+    <input type="text" id="placa" placeholder="Placa do Veículo">
+    <select id="tipo">
+      <option value="Saída">Saída</option>
+      <option value="Chegada">Chegada</option>
+    </select>
+    <label>Assinatura:</label>
+    <canvas id="assinatura"></canvas>
+    <button onclick="salvar()">Salvar Registro</button>
+    <button onclick="limparAssinatura()">Limpar Assinatura</button>
+    <hr>
+    <button onclick="gerarPDF()">Exportar Histórico em PDF</button>
+    <h3>Histórico:</h3>
+    <ul id="historico"></ul>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const canvas = document.getElementById('assinatura');
+    const ctx = canvas.getContext('2d');
+    let desenhando = false;
+
+    canvas.addEventListener('mousedown', () => desenhando = true);
+    canvas.addEventListener('mouseup', () => desenhando = false);
+    canvas.addEventListener('mouseout', () => desenhando = false);
+    canvas.addEventListener('mousemove', desenhar);
+
+    canvas.addEventListener('touchstart', e => { desenhando = true; });
+    canvas.addEventListener('touchend', () => desenhando = false);
+    canvas.addEventListener('touchmove', e => {
+      if (!desenhando) return;
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      ctx.stroke();
+      e.preventDefault();
+    }, { passive: false });
+
+    function desenhar(e) {
+      if (!desenhando) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+    }
+
+    function limparAssinatura() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+    }
+
+    function salvar() {
+      const responsavel = document.getElementById('responsavel').value;
+      const placa = document.getElementById('placa').value;
+      const tipo = document.getElementById('tipo').value;
+      const data = new Date().toLocaleString();
+
+      if (!responsavel || !placa) return alert("Preencha todos os campos.");
+
+      const assinatura = canvas.toDataURL();
+      const registro = { responsavel, placa, tipo, data, assinatura };
+
+      let historico = JSON.parse(localStorage.getItem('historico') || '[]');
+      historico.push(registro);
+      localStorage.setItem('historico', JSON.stringify(historico));
+      atualizarHistorico();
+      limparAssinatura();
+    }
+
+    function atualizarHistorico() {
+      const lista = document.getElementById('historico');
+      lista.innerHTML = '';
+      const historico = JSON.parse(localStorage.getItem('historico') || '[]');
+      historico.forEach(r => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${r.tipo}</strong> - ${r.responsavel} (${r.placa}) em ${r.data}<br><img src="${r.assinatura}" width="150"/>`;
+        lista.appendChild(li);
+      });
+    }
+
+    function gerarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const historico = JSON.parse(localStorage.getItem('historico') || '[]');
+      let y = 10;
+      historico.forEach(r => {
+        doc.text(`Tipo: ${r.tipo} - ${r.responsavel} (${r.placa}) - ${r.data}`, 10, y);
+        y += 10;
+      });
+      doc.save("historico.pdf");
+    }
+
+    function verificarLogin() {
+      const login = document.getElementById('login').value;
+      const senha = document.getElementById('senha').value;
+      if (login === "admin" && senha === "admin1") {
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+        atualizarHistorico();
+      } else {
+        alert("Usuário ou senha incorretos.");
+      }
+    }
+
+    // PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('✅ PWA pronto!'))
+        .catch(err => console.error('Erro PWA:', err));
+    }
+
+    // Inicial
+    document.getElementById('loginContainer').style.display = 'block';
+  </script>
+</body>
+</html>
