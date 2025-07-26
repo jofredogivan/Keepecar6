@@ -3,162 +3,242 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#2c3e50">
   <title>Keepecar6 - Controle de Veículos</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d6efd" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 10px;
-      padding: 0;
-      background-color: #f2f2f2;
-    }
-    .container {
-      max-width: 500px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-    }
-    input, button, select {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      box-sizing: border-box;
-    }
-    canvas {
-      border: 1px solid #ccc;
-      width: 100%;
-      height: 150px;
-    }
-    #loginContainer {
-      display: none;
-    }
+    body { background-color: #f8f9fa; }
+    .card { margin-bottom: 1rem; }
+    .form-control, .btn { margin-bottom: 0.5rem; }
+    canvas { border: 1px solid #ced4da; width: 100%; height: 150px; touch-action: none; }
   </style>
 </head>
-<body>
-  <div class="container" id="loginContainer">
-    <h2>Login - Keepecar6</h2>
-    <input type="text" id="login" placeholder="Usuário">
-    <input type="password" id="senha" placeholder="Senha">
-    <button onclick="verificarLogin()">Entrar</button>
+<body class="container py-3">
+
+<h2 class="text-center mb-4">Keepecar6 - Controle de Veículos</h2>
+
+<div id="login" class="card p-3">
+  <h5>Login</h5>
+  <input type="text" id="user" class="form-control" placeholder="Usuário">
+  <input type="password" id="pass" class="form-control" placeholder="Senha">
+  <button class="btn btn-primary" onclick="login()">Entrar</button>
+</div>
+
+<div id="menu" class="d-none">
+  <div class="card p-3">
+    <h5>Menu Principal</h5>
+    <button class="btn btn-success" onclick="show('cadastroVeiculo')">Cadastro de Veículos</button>
+    <button class="btn btn-warning" onclick="show('registro')">Registro de Movimentação</button>
+    <button class="btn btn-info" onclick="showHistorico()">Histórico</button>
+    <button class="btn btn-secondary" onclick="logout()">Sair</button>
   </div>
+</div>
 
-  <div class="container" id="mainContainer" style="display:none;">
-    <h2>Keepecar6 - Controle de Veículos</h2>
-    <input type="text" id="responsavel" placeholder="Responsável">
-    <input type="text" id="placa" placeholder="Placa do Veículo">
-    <select id="tipo">
-      <option value="Saída">Saída</option>
-      <option value="Chegada">Chegada</option>
-    </select>
-    <label>Assinatura:</label>
-    <canvas id="assinatura"></canvas>
-    <button onclick="salvar()">Salvar Registro</button>
-    <button onclick="limparAssinatura()">Limpar Assinatura</button>
-    <hr>
-    <button onclick="gerarPDF()">Exportar Histórico em PDF</button>
-    <h3>Histórico:</h3>
-    <ul id="historico"></ul>
+<div id="cadastroVeiculo" class="card p-3 d-none">
+  <h5>Cadastro de Veículos</h5>
+  <input type="text" id="novoVeiculo" class="form-control" placeholder="Placa do Veículo">
+  <button class="btn btn-primary" onclick="salvarVeiculo()">Salvar Veículo</button>
+  <button class="btn btn-secondary" onclick="voltar()">Voltar</button>
+</div>
+
+<div id="registro" class="card p-3 d-none">
+  <h5>Registro de Movimentação</h5>
+  <input type="text" id="responsavel" class="form-control" placeholder="Nome do Responsável">
+  <select id="placaSelect" class="form-control mb-2"></select>
+
+  <label for="dataHora">Data e Hora:</label>
+  <input type="datetime-local" id="dataHora" class="form-control">
+
+  <h6>Checklist:</h6>
+  <div class="form-check"><input class="form-check-input" type="checkbox" id="macaco"><label class="form-check-label">Macaco</label></div>
+  <div class="form-check"><input class="form-check-input" type="checkbox" id="triangulo"><label class="form-check-label">Triângulo</label></div>
+  <div class="form-check"><input class="form-check-input" type="checkbox" id="estepe"><label class="form-check-label">Estepe</label></div>
+  <div class="form-check"><input class="form-check-input" type="checkbox" id="agua"><label class="form-check-label">Água</label></div>
+  <div class="form-check"><input class="form-check-input" type="checkbox" id="oleo"><label class="form-check-label">Óleo</label></div>
+
+  <label>Observação ou Avaria de Veículo:</label>
+  <textarea id="observacao" class="form-control"></textarea>
+
+  <h6>Assinatura:</h6>
+  <canvas id="canvas"></canvas>
+  <button class="btn btn-outline-secondary" onclick="limparAssinatura()">Limpar Assinatura</button>
+  <button class="btn btn-success" onclick="salvarRegistro()">Salvar Registro</button>
+  <button class="btn btn-secondary" onclick="voltar()">Voltar</button>
+</div>
+
+<div id="historico" class="card p-3 d-none">
+  <h5>Histórico de Movimentações</h5>
+  <label>Filtrar por Período:</label>
+  <div class="row mb-2">
+    <div class="col"><input type="date" id="filtroDataInicio" class="form-control"></div>
+    <div class="col"><input type="date" id="filtroDataFim" class="form-control"></div>
   </div>
+  <button class="btn btn-primary mb-2" onclick="filtrarHistorico()">Aplicar Filtro</button>
+  <div id="historicoContent" style="white-space: pre-wrap; max-height: 300px; overflow-y:auto;"></div>
+  <button class="btn btn-success mb-1" onclick="exportToExcel()">Exportar para Excel</button>
+  <button class="btn btn-danger mb-1" onclick="fazerBackupPDF()">Exportar para PDF</button>
+  <button class="btn btn-secondary" onclick="voltar()">Voltar</button>
+</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-    const canvas = document.getElementById('assinatura');
-    const ctx = canvas.getContext('2d');
-    let desenhando = false;
-
-    canvas.addEventListener('mousedown', () => desenhando = true);
-    canvas.addEventListener('mouseup', () => desenhando = false);
-    canvas.addEventListener('mouseout', () => desenhando = false);
-    canvas.addEventListener('mousemove', desenhar);
-
-    canvas.addEventListener('touchstart', e => { desenhando = true; });
-    canvas.addEventListener('touchend', () => desenhando = false);
-    canvas.addEventListener('touchmove', e => {
-      if (!desenhando) return;
-      const rect = canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-      ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
-      ctx.stroke();
-      e.preventDefault();
-    }, { passive: false });
-
-    function desenhar(e) {
-      if (!desenhando) return;
-      const rect = canvas.getBoundingClientRect();
-      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-      ctx.stroke();
+<script>
+  function login() {
+    if (document.getElementById('user').value === 'admin' && document.getElementById('pass').value === 'admin1') {
+      document.getElementById('login').classList.add('d-none');
+      document.getElementById('menu').classList.remove('d-none');
+      carregarVeiculos();
+    } else {
+      alert('Usuário ou senha incorretos!');
     }
+  }
 
-    function limparAssinatura() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.beginPath();
+  function logout() { location.reload(); }
+  function voltar() { show('menu'); }
+
+  function show(id) {
+    ['menu', 'cadastroVeiculo', 'registro', 'historico'].forEach(e => document.getElementById(e).classList.add('d-none'));
+    document.getElementById(id).classList.remove('d-none');
+    if (id === 'registro') carregarVeiculos();
+  }
+
+  function salvarVeiculo() {
+    let novo = document.getElementById('novoVeiculo').value.trim();
+    if (novo) {
+      let veiculos = JSON.parse(localStorage.getItem('veiculos') || '[]');
+      veiculos.push(novo);
+      localStorage.setItem('veiculos', JSON.stringify(veiculos));
+      alert('Veículo cadastrado.');
+      document.getElementById('novoVeiculo').value = '';
     }
+  }
 
-    function salvar() {
-      const responsavel = document.getElementById('responsavel').value;
-      const placa = document.getElementById('placa').value;
-      const tipo = document.getElementById('tipo').value;
-      const data = new Date().toLocaleString();
+  function carregarVeiculos() {
+    let veiculos = JSON.parse(localStorage.getItem('veiculos') || '[]');
+    let select = document.getElementById('placaSelect');
+    select.innerHTML = '<option value="">Selecione o Veículo</option>';
+    veiculos.forEach(v => {
+      let opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      select.appendChild(opt);
+    });
+  }
 
-      if (!responsavel || !placa) return alert("Preencha todos os campos.");
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let desenhando = false;
+  canvas.addEventListener('mousedown', e => { desenhando = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+  canvas.addEventListener('mousemove', e => { if (desenhando) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } });
+  canvas.addEventListener('mouseup', () => { desenhando = false; });
 
-      const assinatura = canvas.toDataURL();
-      const registro = { responsavel, placa, tipo, data, assinatura };
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); desenhando = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); });
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); if (desenhando) { let pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); } });
+  canvas.addEventListener('touchend', () => { desenhando = false; });
 
-      let historico = JSON.parse(localStorage.getItem('historico') || '[]');
-      historico.push(registro);
-      localStorage.setItem('historico', JSON.stringify(historico));
-      atualizarHistorico();
-      limparAssinatura();
-    }
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return e.touches ? { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top } : { x: e.offsetX, y: e.offsetY };
+  }
 
-    function atualizarHistorico() {
-      const lista = document.getElementById('historico');
-      lista.innerHTML = '';
-      const historico = JSON.parse(localStorage.getItem('historico') || '[]');
-      historico.forEach(r => {
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${r.tipo}</strong> - ${r.responsavel} (${r.placa}) em ${r.data}<br><img src="${r.assinatura}" width="150"/>`;
-        lista.appendChild(li);
-      });
-    }
+  function limparAssinatura() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
 
-    function gerarPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const historico = JSON.parse(localStorage.getItem('historico') || '[]');
-      let y = 10;
-      historico.forEach(r => {
-        doc.text(`Tipo: ${r.tipo} - ${r.responsavel} (${r.placa}) - ${r.data}`, 10, y);
-        y += 10;
-      });
-      doc.save("historico.pdf");
-    }
+  function salvarRegistro() {
+    const registro = {
+      responsavel: document.getElementById('responsavel').value,
+      placa: document.getElementById('placaSelect').value,
+      dataHora: document.getElementById('dataHora').value,
+      macaco: document.getElementById('macaco').checked,
+      triangulo: document.getElementById('triangulo').checked,
+      estepe: document.getElementById('estepe').checked,
+      agua: document.getElementById('agua').checked,
+      oleo: document.getElementById('oleo').checked,
+      observacao: document.getElementById('observacao').value,
+      assinatura: canvas.toDataURL()
+    };
+    if (!registro.placa) return alert('Selecione um veículo.');
+    let historico = JSON.parse(localStorage.getItem('historico') || '[]');
+    historico.push(registro);
+    localStorage.setItem('historico', JSON.stringify(historico));
+    alert('Registro salvo.');
 
-    function verificarLogin() {
-      const login = document.getElementById('login').value;
-      const senha = document.getElementById('senha').value;
-      if (login === "admin" && senha === "admin1") {
-        document.getElementById('loginContainer').style.display = 'none';
-        document.getElementById('mainContainer').style.display = 'block';
-        atualizarHistorico();
-      } else {
-        alert("Usuário ou senha incorretos.");
+    // limpar campos
+    document.getElementById('responsavel').value = '';
+    document.getElementById('placaSelect').selectedIndex = 0;
+    document.getElementById('dataHora').value = '';
+    ['macaco','triangulo','estepe','agua','oleo'].forEach(id => document.getElementById(id).checked = false);
+    document.getElementById('observacao').value = '';
+    limparAssinatura();
+    voltar();
+  }
+
+  function showHistorico() {
+    filtrarHistorico();
+    show('historico');
+  }
+
+  function filtrarHistorico() {
+    let h = JSON.parse(localStorage.getItem('historico') || '[]');
+    let inicio = document.getElementById('filtroDataInicio').value;
+    let fim = document.getElementById('filtroDataFim').value;
+    let txt = '';
+    h.forEach((r, i) => {
+      if (r.dataHora) {
+        let dataRegistro = r.dataHora.substring(0,10);
+        let dentroPeriodo = true;
+        if (inicio && dataRegistro < inicio) dentroPeriodo = false;
+        if (fim && dataRegistro > fim) dentroPeriodo = false;
+        if (dentroPeriodo) {
+          txt += `Registro ${i + 1}:
+Responsável: ${r.responsavel}
+Placa: ${r.placa}
+DataHora: ${r.dataHora}
+Checklist: [Macaco: ${r.macaco}, Triângulo: ${r.triangulo}, Estepe: ${r.estepe}, Água: ${r.agua}, Óleo: ${r.oleo}]
+Observação: ${r.observacao}
+---\n`;
+        }
       }
-    }
+    });
+    document.getElementById('historicoContent').innerText = txt || 'Nenhum registro encontrado.';
+  }
 
-    // PWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('✅ PWA pronto!'))
-        .catch(err => console.error('Erro PWA:', err));
-    }
+  function exportToExcel() {
+    let h = JSON.parse(localStorage.getItem('historico') || '[]');
+    let ws = XLSX.utils.json_to_sheet(h);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Historico");
+    XLSX.writeFile(wb, "historico_keepecar6.xlsx");
+  }
 
-    // Inicial
-    document.getElementById('loginContainer').style.display = 'block';
-  </script>
+  async function fazerBackupPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let h = JSON.parse(localStorage.getItem('historico') || '[]');
+    let y = 20;
+    doc.setFontSize(16);
+    doc.text('Backup de Movimentação - Keepecar6', 20, y);
+    y += 10;
+    h.forEach((r, i) => {
+      doc.setFontSize(10);
+      doc.text(`Registro ${i + 1}:`, 20, y); y+=5;
+      doc.text(`Responsável: ${r.responsavel}`, 20, y); y+=5;
+      doc.text(`Placa: ${r.placa}`, 20, y); y+=5;
+      doc.text(`DataHora: ${r.dataHora}`, 20, y); y+=5;
+      doc.text(`Checklist: Macaco: ${r.macaco}, Triângulo: ${r.triangulo}, Estepe: ${r.estepe}, Água: ${r.agua}, Óleo: ${r.oleo}`, 20, y); y+=5;
+      doc.text(`Observação: ${r.observacao}`, 20, y); y+=10;
+      if (y > 270) { doc.addPage(); y = 20; }
+    });
+    doc.save('backup_keepecar6.pdf');
+  }
+
+  // Registrar Service Worker se existir
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+  }
+</script>
+
 </body>
 </html>
