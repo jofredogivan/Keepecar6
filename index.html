@@ -9,31 +9,49 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     html, body {
-      height: 100%; /* Garante que html e body ocupem 100% da altura do viewport */
+      height: 100%; /* Ensures html and body take 100% of viewport height */
       margin: 0;
       padding: 0;
-      overflow-x: hidden; /* Evita rolagem horizontal indesejada */
+      overflow-x: hidden; /* Prevents unwanted horizontal scrolling */
+      overflow-y: auto; /* Allows vertical scrolling when content exceeds viewport height */
     }
     body {
       background: linear-gradient(to right, #e0f7fa, #f1f8e9); /* Light blue to light green */
       font-family: 'Inter', sans-serif; /* Changed font to Inter for modern look */
       display: flex;
-      justify-content: center;
-      align-items: center;
+      flex-direction: column; /* Changed to column to stack header and container */
+      justify-content: flex-start; /* Align content to start, allowing header to stay at top */
+      align-items: center; /* Center items horizontally */
       padding: 1rem;
     }
     .container {
       max-width: 600px;
       width: 100%;
+      margin-bottom: 0; /* Remove margin-bottom from container if it's causing issues, rely on card-custom margin */
     }
     .card-custom {
       border-radius: 1.5rem; /* More rounded corners */
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Softer, larger shadow */
       background-color: #ffffff;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem; /* Slightly reduced margin-bottom for compactness */
       border: none; /* Remove default border */
+      padding: 1.5rem; /* Default padding for cards */
     }
-    h2, h4, h5 {
+    /* Specific adjustment for mobile padding on cards */
+    @media (max-width: 576px) { /* Bootstrap's sm breakpoint */
+      .card-custom {
+        padding: 1rem; /* Reduced padding for smaller screens */
+      }
+    }
+
+    h2 {
+      font-weight: 700; /* Bolder headings */
+      color: #2c3e50; /* Darker, more modern blue/grey */
+      text-align: center; /* Ensure header text is centered */
+      margin-bottom: 2rem; /* Keep some margin below the main title */
+      margin-top: 1rem; /* Ensure some top margin for the main title */
+    }
+    h4, h5 {
       font-weight: 700; /* Bolder headings */
       color: #2c3e50; /* Darker, more modern blue/grey */
     }
@@ -91,12 +109,12 @@
       background-color: #dc3545;
       color: #fff;
     }
-    input.form-control, select.form-select {
+    input.form-control, select.form-select, textarea.form-control {
       border-radius: 0.5rem; /* Rounded inputs */
       border: 1px solid #ced4da;
       padding: 0.75rem 1rem;
     }
-    input.form-control:focus, select.form-select:focus {
+    input.form-control:focus, select.form-select:focus, textarea.form-control:focus {
       border-color: #80bdff;
       box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     }
@@ -112,6 +130,12 @@
     pre {
       background-color: #f8f9fa; /* Lighter background for pre */
       border: 1px solid #e9ecef;
+      white-space: pre-wrap; /* Ensures text wraps within the pre tag */
+      word-wrap: break-word; /* Breaks long words */
+      padding: 0.75rem; /* Reduced padding for compactness */
+    }
+    .form-check {
+        margin-bottom: 0.5rem; /* Reduced margin for compactness */
     }
 
     /* Custom Modal Styles */
@@ -202,6 +226,32 @@
       <option value="Chegada">Chegada</option>
     </select>
     <input type="datetime-local" id="dataHora" class="form-control mb-3">
+
+    <h5 class="mt-3 mb-2">✅ Checklist de Itens:</h5>
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="checkMacaco">
+      <label class="form-check-label" for="checkMacaco">Macaco</label>
+    </div>
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="checkOleo">
+      <label class="form-check-label" for="checkOleo">Óleo</label>
+    </div>
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="checkStep">
+      <label class="form-check-label" for="checkStep">Estepe</label>
+    </div>
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="checkAgua">
+      <label class="form-check-label" for="checkAgua">Água</label>
+    </div>
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="checkDocumento">
+      <label class="form-check-label" for="checkDocumento">Documento</label>
+    </div>
+
+    <h5 class="mt-3 mb-2">🗒️ Observação:</h5>
+    <textarea id="observacao" class="form-control mb-3" rows="3" placeholder="Adicione observações adicionais aqui..."></textarea>
+
     <h5 class="mt-3">✍️ Assinatura:</h5>
     <canvas id="canvas" class="mb-3" width="400" height="200"></canvas>
     <button class="btn btn-outline-secondary w-100 mb-2" onclick="limparAssinatura()">Limpar Assinatura</button>
@@ -316,6 +366,28 @@
           } else {
               console.error('Erro: Canvas ou contexto não disponível ao tentar mostrar a tela de registro após atraso. Verifique se o canvas existe no DOM e se o contexto 2D foi obtido.');
           }
+          // Limpa também os campos do checklist e observação ao entrar na tela de registro
+          document.getElementById('checkMacaco').checked = false;
+          document.getElementById('checkOleo').checked = false;
+          document.getElementById('checkStep').checked = false;
+          document.getElementById('checkAgua').checked = false;
+          document.getElementById('checkDocumento').checked = false;
+          document.getElementById('observacao').value = '';
+
+          // Log the state of responsavel and placaSelect after showing the section
+          const responsavelInput = document.getElementById('responsavel');
+          const placaSelect = document.getElementById('placaSelect');
+          if (responsavelInput) {
+              console.log('Responsável input found. OffsetWidth:', responsavelInput.offsetWidth, 'offsetHeight:', responsavelInput.offsetHeight);
+          } else {
+              console.error('Responsável input NOT found after showing registration section.');
+          }
+          if (placaSelect) {
+              console.log('Placa Select found. OffsetWidth:', placaSelect.offsetWidth, 'offsetHeight:', placaSelect.offsetHeight);
+          } else {
+              console.error('Placa Select NOT found after showing registration section.');
+          }
+
       }, 100); // Pequeno atraso para garantir que o elemento esteja renderizado
     }
     // Limpa os resultados da pesquisa e os registros filtrados ao mudar de tela
@@ -383,6 +455,20 @@
           }
       } else {
           console.error('Elemento canvas com ID "canvas" não encontrado em DOMContentLoaded. Verifique o ID no HTML.');
+      }
+
+      // Log the initial state of responsavel and placaSelect
+      const responsavelInput = document.getElementById('responsavel');
+      const placaSelect = document.getElementById('placaSelect');
+      if (responsavelInput) {
+          console.log('Initial Responsável input found. OffsetWidth:', responsavelInput.offsetWidth, 'offsetHeight:', responsavelInput.offsetHeight);
+      } else {
+          console.error('Initial Responsável input NOT found.');
+      }
+      if (placaSelect) {
+          console.log('Initial Placa Select found. OffsetWidth:', placaSelect.offsetWidth, 'offsetHeight:', placaSelect.offsetHeight);
+      } else {
+          console.error('Initial Placa Select NOT found.');
       }
   });
 
@@ -538,6 +624,14 @@
     const placa = document.getElementById('placaSelect').value;
     const tipo = document.getElementById('tipoMovimento').value;
     const dataHora = document.getElementById('dataHora').value;
+
+    // Captura o estado do checklist
+    const checkMacaco = document.getElementById('checkMacaco').checked;
+    const checkOleo = document.getElementById('checkOleo').checked;
+    const checkStep = document.getElementById('checkStep').checked;
+    const checkAgua = document.getElementById('checkAgua').checked;
+    const checkDocumento = document.getElementById('checkDocumento').checked;
+    const observacao = document.getElementById('observacao').value.trim();
     
     // Verifica se o contexto do canvas está disponível antes de tentar obter a assinatura
     const assinatura = ctx ? canvas.toDataURL() : null;
@@ -563,6 +657,12 @@
       placa: placa,
       tipo: tipo,
       dataHora: dataHora,
+      checkMacaco: checkMacaco,
+      checkOleo: checkOleo,
+      checkStep: checkStep,
+      checkAgua: checkAgua,
+      checkDocumento: checkDocumento,
+      observacao: observacao,
       assinatura: assinatura
     };
     
@@ -573,6 +673,14 @@
     document.getElementById('responsavel').value = '';
     document.getElementById('placaSelect').value = '';
     document.getElementById('dataHora').value = '';
+    // Limpa os campos do checklist e observação após salvar
+    document.getElementById('checkMacaco').checked = false;
+    document.getElementById('checkOleo').checked = false;
+    document.getElementById('checkStep').checked = false;
+    document.getElementById('checkAgua').checked = false;
+    document.getElementById('checkDocumento').checked = false;
+    document.getElementById('observacao').value = '';
+
     limparAssinatura();
     voltar();
     console.log('Registro salvo com sucesso.');
@@ -585,7 +693,10 @@
         txt = 'Nenhum registro.';
     } else {
         h.forEach((r, i) => {
-            txt += `#${i + 1} - ${r.tipo} - ${new Date(r.dataHora).toLocaleString()}\nResponsável: ${r.responsavel}\nPlaca: ${r.placa}\n---\n`;
+            txt += `#${i + 1} - ${r.tipo} - ${new Date(r.dataHora).toLocaleString()}\n`;
+            txt += `Responsável: ${r.responsavel}\nPlaca: ${r.placa}\n`;
+            txt += `Checklist: Macaco(${r.checkMacaco ? 'Sim' : 'Não'}), Óleo(${r.checkOleo ? 'Sim' : 'Não'}), Estepe(${r.checkStep ? 'Sim' : 'Não'}), Água(${r.checkAgua ? 'Sim' : 'Não'}), Documento(${r.checkDocumento ? 'Sim' : 'Não'})\n`;
+            txt += `Observação: ${r.observacao || 'N/A'}\n---\n`;
         });
     }
     document.getElementById('historicoContent').innerText = txt;
@@ -628,7 +739,10 @@
       console.log('Nenhum registro encontrado para o período filtrado.');
     } else {
       filteredRecords.forEach((r, i) => {
-        resultado += `#${i + 1} - ${r.tipo} - ${new Date(r.dataHora).toLocaleString()}\nResponsável: ${r.responsavel}\nPlaca: ${r.placa}\n---\n`;
+        resultado += `#${i + 1} - ${r.tipo} - ${new Date(r.dataHora).toLocaleString()}\n`;
+        resultado += `Responsável: ${r.responsavel}\nPlaca: ${r.placa}\n`;
+        resultado += `Checklist: Macaco(${r.checkMacaco ? 'Sim' : 'Não'}), Óleo(${r.checkOleo ? 'Sim' : 'Não'}), Estepe(${r.checkStep ? 'Sim' : 'Não'}), Água(${r.checkAgua ? 'Sim' : 'Não'}), Documento(${r.checkDocumento ? 'Sim' : 'Não'})\n`;
+        resultado += `Observação: ${r.observacao || 'N/A'}\n---\n`;
       });
       console.log(`${filteredRecords.length} registros encontrados para o período filtrado.`);
     }
@@ -651,7 +765,7 @@
     doc.setFontSize(18);
     doc.text("Histórico Completo de Movimentação de Veículos - Keepecar6", 14, 22);
 
-    const tableColumn = ["#", "Tipo", "Data/Hora", "Responsável", "Placa"];
+    const tableColumn = ["#", "Tipo", "Data/Hora", "Responsável", "Placa", "Macaco", "Óleo", "Estepe", "Água", "Documento", "Observação"];
     const tableRows = [];
 
     historico.forEach((record, index) => {
@@ -660,7 +774,13 @@
         record.tipo,
         new Date(record.dataHora).toLocaleString(),
         record.responsavel,
-        record.placa
+        record.placa,
+        record.checkMacaco ? 'Sim' : 'Não',
+        record.checkOleo ? 'Sim' : 'Não',
+        record.checkStep ? 'Sim' : 'Não',
+        record.checkAgua ? 'Sim' : 'Não',
+        record.checkDocumento ? 'Sim' : 'Não',
+        record.observacao || 'N/A'
       ];
       tableRows.push(recordData);
     });
@@ -680,7 +800,7 @@
     }
 
     const ws_data = [
-      ["#", "Tipo", "Data/Hora", "Responsável", "Placa"]
+      ["#", "Tipo", "Data/Hora", "Responsável", "Placa", "Macaco", "Óleo", "Estepe", "Água", "Documento", "Observação"]
     ];
 
     historico.forEach((record, index) => {
@@ -689,7 +809,13 @@
         record.tipo,
         new Date(record.dataHora).toLocaleString(),
         record.responsavel,
-        record.placa
+        record.placa,
+        record.checkMacaco ? 'Sim' : 'Não',
+        record.checkOleo ? 'Sim' : 'Não',
+        record.checkStep ? 'Sim' : 'Não',
+        record.checkAgua ? 'Sim' : 'Não',
+        record.checkDocumento ? 'Sim' : 'Não',
+        record.observacao || 'N/A'
       ]);
     });
 
@@ -715,7 +841,7 @@
     doc.setFontSize(18);
     doc.text("Resultados da Pesquisa de Veículos - Keepecar6", 14, 22);
 
-    const tableColumn = ["#", "Tipo", "Data/Hora", "Responsável", "Placa"];
+    const tableColumn = ["#", "Tipo", "Data/Hora", "Responsável", "Placa", "Macaco", "Óleo", "Estepe", "Água", "Documento", "Observação"];
     const tableRows = [];
 
     currentFilteredRecords.forEach((record, index) => {
@@ -724,7 +850,13 @@
         record.tipo,
         new Date(record.dataHora).toLocaleString(),
         record.responsavel,
-        record.placa
+        record.placa,
+        record.checkMacaco ? 'Sim' : 'Não',
+        record.checkOleo ? 'Sim' : 'Não',
+        record.checkStep ? 'Sim' : 'Não',
+        record.checkAgua ? 'Sim' : 'Não',
+        record.checkDocumento ? 'Sim' : 'Não',
+        record.observacao || 'N/A'
       ];
       tableRows.push(recordData);
     });
@@ -743,7 +875,7 @@
     }
 
     const ws_data = [
-      ["#", "Tipo", "Data/Hora", "Responsável", "Placa"]
+      ["#", "Tipo", "Data/Hora", "Responsável", "Placa", "Macaco", "Óleo", "Estepe", "Água", "Documento", "Observação"]
     ];
 
     currentFilteredRecords.forEach((record, index) => {
@@ -752,7 +884,13 @@
         record.tipo,
         new Date(record.dataHora).toLocaleString(),
         record.responsavel,
-        record.placa
+        record.placa,
+        record.checkMacaco ? 'Sim' : 'Não',
+        record.checkOleo ? 'Sim' : 'Não',
+        record.checkStep ? 'Sim' : 'Não',
+        record.checkAgua ? 'Sim' : 'Não',
+        record.checkDocumento ? 'Sim' : 'Não',
+        record.observacao || 'N/A'
       ]);
     });
 
