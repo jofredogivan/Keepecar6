@@ -3,63 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Japan Security Car - Controle de Veículos</title>
-  <link rel="manifest" href="./manifest.json"> <!-- Adicionado para PWA -->
+  <title>Japan Security Car</title> <!-- Título atualizado aqui -->
+  <link rel="manifest" href="./manifest.json">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Google Fonts - Inter for a modern look -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     html, body {
-      height: 100%; /* Ensures html and body take 100% of viewport height */
+      height: 100%;
       margin: 0;
       padding: 0;
-      overflow-x: hidden; /* Prevents unwanted horizontal scrolling */
-      overflow-y: auto; /* Allows vertical scrolling when content exceeds viewport height */
+      overflow-x: hidden;
+      overflow-y: auto;
     }
     body {
-      background: linear-gradient(to right, #e0f7fa, #f1f8e9); /* Light blue to light green */
-      font-family: 'Inter', sans-serif; /* Changed font to Inter for modern look */
+      background: linear-gradient(to right, #e0f7fa, #f1f8e9);
+      font-family: 'Inter', sans-serif;
       display: flex;
-      flex-direction: column; /* Changed to column to stack header and container */
-      justify-content: flex-start; /* Align content to start, allowing header to stay at top */
-      align-items: center; /* Center items horizontally */
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
       padding: 1rem;
     }
     .container {
       max-width: 600px;
       width: 100%;
-      margin-bottom: 0; /* Remove margin-bottom from container if it's causing issues, rely on card-custom margin */
+      margin-bottom: 0;
     }
     .card-custom {
-      border-radius: 1.5rem; /* More rounded corners */
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Softer, larger shadow */
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       background-color: #ffffff;
-      margin-bottom: 1rem; /* Slightly reduced margin-bottom for compactness */
-      border: none; /* Remove default border */
-      padding: 1.5rem; /* Default padding for cards */
+      margin-bottom: 1rem;
+      border: none;
+      padding: 1.5rem;
     }
-    /* Specific adjustment for mobile padding on cards */
-    @media (max-width: 576px) { /* Bootstrap's sm breakpoint */
+    @media (max-width: 576px) {
       .card-custom {
-        padding: 1rem; /* Reduced padding for smaller screens */
+        padding: 1rem;
       }
     }
 
     h2 {
-      font-weight: 700; /* Bolder headings */
-      color: #2c3e50; /* Darker, more modern blue/grey */
-      text-align: center; /* Ensure header text is centered */
-      margin-bottom: 2rem; /* Keep some margin below the main title */
-      margin-top: 1rem; /* Ensure some top margin for the main title */
+      font-weight: 700;
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 2rem;
+      margin-top: 1rem;
     }
     h4, h5 {
-      font-weight: 700; /* Bolder headings */
-      color: #2c3e50; /* Darker, more modern blue/grey */
+      font-weight: 700;
+      color: #2c3e50;
     }
     .btn {
-      border-radius: 0.75rem; /* Rounded buttons */
+      border-radius: 0.75rem;
       font-weight: 600;
-      transition: all 0.3s ease; /* Smooth transitions for hover */
+      transition: all 0.3s ease;
     }
     .btn-primary {
       background-color: #007bff;
@@ -68,7 +67,7 @@
     .btn-primary:hover {
       background-color: #0056b3;
       border-color: #0056b3;
-      transform: translateY(-2px); /* Slight lift effect */
+      transform: translateY(-2px);
     }
     .btn-outline-success {
       color: #28a745;
@@ -111,7 +110,7 @@
       color: #fff;
     }
     input.form-control, select.form-select, textarea.form-control {
-      border-radius: 0.5rem; /* Rounded inputs */
+      border-radius: 0.5rem;
       border: 1px solid #ced4da;
       padding: 0.75rem 1rem;
     }
@@ -120,23 +119,23 @@
       box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     }
     canvas {
-      border: 1px dashed #a0d9ff; /* Lighter dashed border for canvas */
-      background-color: #e9f7ff; /* Lighter background for canvas */
-      width: 100%; /* Make canvas responsive for display */
-      height: 200px; /* Fixed height for display */
-      display: block !important; /* Force display to block */
-      box-sizing: border-box; /* Include padding and border in the element's total width and height */
-      touch-action: none; /* Prevents default touch actions like scrolling/zooming on canvas */
+      border: 1px dashed #a0d9ff;
+      background-color: #e9f7ff;
+      width: 100%;
+      height: 200px;
+      display: block !important;
+      box-sizing: border-box;
+      touch-action: none;
     }
     pre {
-      background-color: #f8f9fa; /* Lighter background for pre */
+      background-color: #f8f9fa;
       border: 1px solid #e9ecef;
-      white-space: pre-wrap; /* Ensures text wraps within the pre tag */
-      word-wrap: break-word; /* Breaks long words */
-      padding: 0.75rem; /* Reduced padding for compactness */
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      padding: 0.75rem;
     }
     .form-check {
-        margin-bottom: 0.5rem; /* Reduced margin for compactness */
+        margin-bottom: 0.5rem;
     }
 
     /* Custom Modal Styles */
@@ -144,13 +143,13 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 100vw; /* Use 100vw for full viewport width */
-      height: 100vh; /* Use 100vh for full viewport height */
+      width: 100vw;
+      height: 100vh;
       background: rgba(0, 0, 0, 0.5);
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 1050; /* Above Bootstrap modals if any */
+      z-index: 1050;
     }
     .custom-modal-content {
       background: #ffffff;
@@ -161,7 +160,7 @@
       width: 90%;
       text-align: center;
       position: relative;
-      margin: auto; /* Fallback for centering */
+      margin: auto;
     }
     .custom-modal-content h5 {
       margin-bottom: 1rem;
@@ -189,7 +188,7 @@
 <body>
 
 <div class="container py-5">
-  <h2 class="text-center mb-5">🚗 Keepecar6 - Controle de Veículos</h2>
+  <h2 class="text-center mb-5">🚗 Japan Security Car</h2> <!-- Título do App atualizado aqui -->
 
   <div id="login" class="card card-custom p-4">
     <h4 class="mb-3">🔒 Login de Acesso</h4>
@@ -280,7 +279,7 @@
       <button class="btn btn-info" onclick="exportToPdf()">Exportar para PDF</button>
       <button class="btn btn-success" onclick="exportToExcel()">Exportar para Excel</button>
     </div>
-    <button class="btn btn-secondary w-100 mt-3" onclick="voltar()">Voltar</button>
+    <button class="btn btn-secondary w-100 mt-3" onclick="voltar()">Volta</button>
   </div>
 
 </div>
@@ -544,7 +543,7 @@
   // Os listeners de evento são adicionados uma vez em DOMContentLoaded
   document.addEventListener('DOMContentLoaded', () => {
     if (canvas && ctx) {
-        // Mouse Events
+        // Eventos do Mouse
         canvas.addEventListener('mousedown', e => {
           desenhando = true;
           const coords = getCanvasCoords(e);
@@ -574,7 +573,7 @@
           }
         });
 
-        // Touch Events
+        // Eventos de Toque
         canvas.addEventListener('touchstart', e => {
           e.preventDefault(); // Previne ações padrão como rolagem/zoom
           desenhando = true;
@@ -764,7 +763,7 @@
     const doc = new jsPDF();
 
     doc.setFontSize(18);
-    doc.text("Histórico Completo de Movimentação de Veículos - Keepecar6", 14, 22);
+    doc.text("Histórico Completo de Movimentação de Veículos - Japan Security Car", 14, 22);
 
     const tableColumn = ["#", "Tipo", "Data/Hora", "Responsável", "Placa", "Macaco", "Óleo", "Estepe", "Água", "Documento", "Observação"];
     const tableRows = [];
@@ -840,7 +839,7 @@
     const doc = new jsPDF();
 
     doc.setFontSize(18);
-    doc.text("Resultados da Pesquisa de Veículos - Keepecar6", 14, 22);
+    doc.text("Resultados da Pesquisa de Veículos - Japan Security Car", 14, 22);
 
     const tableColumn = ["#", "Tipo", "Data/Hora", "Responsável", "Placa", "Macaco", "Óleo", "Estepe", "Água", "Documento", "Observação"];
     const tableRows = [];
@@ -903,9 +902,20 @@
     showAlertModal('Exportação', 'Resultados da pesquisa exportados para Excel com sucesso!');
     console.log('Resultados da pesquisa exportados para Excel.');
   }
+
+  // --- Registro do Service Worker ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => {
+          console.log('Service Worker registrado com sucesso:', reg);
+        })
+        .catch(err => {
+          console.error('Falha no registro do Service Worker:', err);
+        });
+    });
+  }
 </script>
 
 </body>
 </html>
-
-
