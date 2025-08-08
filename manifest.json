@@ -1,6 +1,6 @@
 {
   "name": "Japan Security Car - Controle de Veículos",
-  "short_name": "Keepecar6",
+  "short_name": "Japan Security Car",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8f9fa",
@@ -19,4 +19,5 @@
     }
   ]
 }
+
 
