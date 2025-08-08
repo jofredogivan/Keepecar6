@@ -1,5 +1,5 @@
 {
-  "name": "Keepecar6 - Controle de Veículos",
+  "name": "Japan Security Car - Controle de Veículos",
   "short_name": "Keepecar6",
   "start_url": "./index.html",
   "display": "standalone",
@@ -19,3 +19,4 @@
     }
   ]
 }
+
