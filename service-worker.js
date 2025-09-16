@@ -1,4 +1,4 @@
-const CACHE_NAME = "keepecar6-cache-v2"; // Versão do cache atualizada
+const CACHE_NAME = "keepecar6-cache-v3"; // Versão do cache atualizada
 const FILES_TO_CACHE = [
   "./index.html",
   "./manifest.json",
@@ -49,3 +49,4 @@ self.addEventListener("fetch", (evt) => {
     })
   );
 });
+
