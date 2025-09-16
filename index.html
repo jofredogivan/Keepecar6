@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Japan Security Car</title> <!-- Título atualizado aqui -->
+  <title>Japan Security Car</title>
   <link rel="manifest" href="./manifest.json">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Google Fonts - Inter for a modern look -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     html, body {
@@ -183,36 +182,78 @@
     .custom-modal-close-btn:hover {
       color: #555;
     }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #0d6efd;
+        animation: spin 1s ease infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .user-info {
+        font-size: 0.75rem;
+        color: #6c757d;
+        text-align: center;
+        margin-top: 1rem;
+        word-break: break-all;
+    }
   </style>
 </head>
 <body>
 
-<div class="container py-5">
-  <h2 class="text-center mb-5">🚗 Japan Security Car</h2> <!-- Título do App atualizado aqui -->
+<div class="loading-overlay d-none" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
 
-  <div id="login" class="card card-custom p-4">
+<div class="container py-5">
+  <h2 class="text-center mb-5">🚗 Japan Security Car</h2>
+
+  <div id="login" class="card card-custom p-4 d-none">
     <h4 class="mb-3">🔒 Login de Acesso</h4>
     <input type="text" id="user" class="form-control mb-3" placeholder="Usuário">
     <input type="password" id="pass" class="form-control mb-3" placeholder="Senha">
-    <button class="btn btn-primary w-100" onclick="login()">Entrar</button>
+    <button class="btn btn-primary w-100" id="loginBtn">Entrar</button>
   </div>
 
   <div id="menu" class="card card-custom p-4 d-none">
     <h4 class="mb-4">📋 Menu Principal</h4>
     <div class="d-grid gap-2">
-      <button class="btn btn-outline-success" onclick="show('cadastroVeiculo')">Cadastro de Veículos</button>
-      <button class="btn btn-outline-warning" onclick="show('registro')">Registro de Movimentação</button>
-      <button class="btn btn-outline-info" onclick="show('pesquisa')">Pesquisar por Data</button>
-      <button class="btn btn-outline-secondary" onclick="showHistorico()">Ver Histórico Completo</button>
-      <button class="btn btn-outline-danger" onclick="logout()">Sair</button>
+      <button class="btn btn-outline-success" id="showCadastroBtn">Cadastro de Veículos</button>
+      <button class="btn btn-outline-warning" id="showRegistroBtn">Registro de Movimentação</button>
+      <button class="btn btn-outline-info" id="showPesquisaBtn">Pesquisar por Data</button>
+      <button class="btn btn-outline-secondary" id="showHistoricoBtn">Ver Histórico Completo</button>
+      <button class="btn btn-outline-danger" id="logoutBtn">Sair</button>
+    </div>
+    <div class="user-info mt-3">
+        Seu ID de usuário: <br> <span id="userIdDisplay"></span>
     </div>
   </div>
 
   <div id="cadastroVeiculo" class="card card-custom p-4 d-none">
     <h4 class="mb-3">🚙 Cadastro de Veículos</h4>
     <input type="text" id="novoVeiculo" class="form-control mb-3" placeholder="Placa do Veículo">
-    <button class="btn btn-primary w-100 mb-2" onclick="salvarVeiculo()">Salvar Veículo</button>
-    <button class="btn btn-secondary w-100" onclick="voltar()">Voltar</button>
+    <button class="btn btn-primary w-100 mb-2" id="salvarVeiculoBtn">Salvar Veículo</button>
+    <button class="btn btn-secondary w-100" id="voltarFromCadastroBtn">Voltar</button>
   </div>
 
   <div id="registro" class="card card-custom p-4 d-none">
@@ -254,32 +295,32 @@
 
     <h5 class="mt-3">✍️ Assinatura:</h5>
     <canvas id="canvas" class="mb-3" width="400" height="200"></canvas>
-    <button class="btn btn-outline-secondary w-100 mb-2" onclick="limparAssinatura()">Limpar Assinatura</button>
-    <button class="btn btn-success w-100 mb-2" onclick="salvarRegistro()">Salvar Registro</button>
-    <button class="btn btn-secondary w-100" onclick="voltar()">Voltar</button>
+    <button class="btn btn-outline-secondary w-100 mb-2" id="limparAssinaturaBtn">Limpar Assinatura</button>
+    <button class="btn btn-success w-100 mb-2" id="salvarRegistroBtn">Salvar Registro</button>
+    <button class="btn btn-secondary w-100" id="voltarFromRegistroBtn">Voltar</button>
   </div>
 
   <div id="pesquisa" class="card card-custom p-4 d-none">
     <h4 class="mb-3">🔎 Pesquisa por Data e Hora</h4>
     <input type="datetime-local" id="dataInicio" class="form-control mb-2">
     <input type="datetime-local" id="dataFim" class="form-control mb-3">
-    <button class="btn btn-info w-100 mb-3" onclick="filtrarPorData()">Pesquisar</button>
+    <button class="btn btn-info w-100 mb-3" id="filtrarBtn">Pesquisar</button>
     <pre id="resultadoPesquisa"></pre>
     <div class="d-grid gap-2 mt-3">
-      <button class="btn btn-info" onclick="exportFilteredToPdf()">Exportar Pesquisa para PDF</button>
-      <button class="btn btn-success" onclick="exportFilteredToExcel()">Exportar Pesquisa para Excel</button>
+      <button class="btn btn-info" id="exportFilteredPdfBtn">Exportar Pesquisa para PDF</button>
+      <button class="btn btn-success" id="exportFilteredExcelBtn">Exportar Pesquisa para Excel</button>
     </div>
-    <button class="btn btn-secondary w-100 mt-3" onclick="voltar()">Voltar</button>
+    <button class="btn btn-secondary w-100 mt-3" id="voltarFromPesquisaBtn">Voltar</button>
   </div>
 
   <div id="historico" class="card card-custom p-4 d-none">
     <h4 class="mb-3">📚 Histórico Completo</h4>
     <pre id="historicoContent"></pre>
     <div class="d-grid gap-2 mt-3">
-      <button class="btn btn-info" onclick="exportToPdf()">Exportar para PDF</button>
-      <button class="btn btn-success" onclick="exportToExcel()">Exportar para Excel</button>
+      <button class="btn btn-info" id="exportPdfBtn">Exportar para PDF</button>
+      <button class="btn btn-success" id="exportExcelBtn">Exportar para Excel</button>
     </div>
-    <button class="btn btn-secondary w-100 mt-3" onclick="voltar()">Volta</button>
+    <button class="btn btn-secondary w-100 mt-3" id="voltarFromHistoricoBtn">Voltar</button>
   </div>
 
 </div>
@@ -287,23 +328,82 @@
 <!-- Custom Alert Modal -->
 <div id="customAlertModal" class="custom-modal-overlay d-none">
   <div class="custom-modal-content">
-    <button class="custom-modal-close-btn" onclick="hideAlertModal()">&times;</button>
+    <button class="custom-modal-close-btn" id="closeAlertBtn">&times;</button>
     <h5 id="alertModalTitle"></h5>
     <p id="alertModalMessage"></p>
-    <button class="btn btn-primary" onclick="hideAlertModal()">OK</button>
+    <button class="btn btn-primary" id="okAlertBtn">OK</button>
   </div>
 </div>
 
-<!-- CDN for jsPDF and SheetJS (XLSX) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Firebase SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, where, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-<script>
-  // Variável global para armazenar os registros filtrados para exportação
+  // Variáveis globais de ambiente
+  const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+  const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+  // Variáveis globais para o Firebase
+  let app;
+  let db;
+  let auth;
+  let userId = null;
+  let isAuthReady = false;
+  let historicoCompleto = [];
   let currentFilteredRecords = [];
 
-  // Função para exibir o modal de alerta personalizado
+  // Variáveis para o canvas
+  let canvas;
+  let ctx;
+  let desenhando = false;
+
+  // Inicializa o Firebase e adiciona event listeners
+  window.onload = function() {
+    try {
+      showLoading(true);
+      app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      auth = getAuth(app);
+      console.log("Firebase inicializado.");
+      
+      // Monitora o estado da autenticação
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          userId = user.uid;
+          isAuthReady = true;
+          document.getElementById('userIdDisplay').innerText = userId;
+          console.log("Usuário autenticado:", userId);
+          // Inicia a escuta em tempo real dos registros
+          setupRealtimeListener();
+        } else {
+          // Tenta logar anonimamente ou com o token
+          if (initialAuthToken) {
+            await signInWithCustomToken(auth, initialAuthToken);
+            console.log("Login com token personalizado.");
+          } else {
+            await signInAnonymously(auth);
+            console.log("Login anônimo.");
+          }
+        }
+        // Esconde o carregamento e mostra a tela de login após a autenticação ser resolvida
+        showLoading(false);
+        document.getElementById('login').classList.remove('d-none');
+      });
+    } catch (e) {
+      console.error("Erro ao inicializar Firebase:", e);
+      showAlertModal("Erro de Conexão", "Não foi possível conectar ao banco de dados. Verifique sua conexão e tente novamente.");
+      showLoading(false);
+    }
+  };
+
+  // Funções de UI
+  function showLoading(show) {
+    document.getElementById('loadingOverlay').classList.toggle('d-none', !show);
+  }
+
   function showAlertModal(title, message) {
     document.getElementById('alertModalTitle').innerText = title;
     document.getElementById('alertModalMessage').innerText = message;
@@ -311,7 +411,6 @@
     console.log(`Modal de alerta exibido: ${title} - ${message}`);
   }
 
-  // Função para ocultar o modal de alerta personalizado
   function hideAlertModal() {
     document.getElementById('customAlertModal').classList.add('d-none');
     console.log('Modal de alerta ocultado.');
@@ -320,7 +419,6 @@
   function login() {
     const u = document.getElementById('user').value.trim();
     const p = document.getElementById('pass').value.trim();
-    // Credenciais de login (usuário/senha)
     const usuarios = [{ user: 'admin', pass: 'admin1' }, { user: 'user2', pass: 'senha2' }];
     const autorizado = usuarios.some(item => item.user === u && item.pass === p);
     if (autorizado) {
@@ -340,57 +438,26 @@
   }
 
   function show(id) {
-    // Esconde todas as seções primeiro
     ['menu', 'cadastroVeiculo', 'registro', 'historico', 'pesquisa'].forEach(e => document.getElementById(e).classList.add('d-none'));
     
-    // Mostra a seção desejada
     const targetElement = document.getElementById(id);
     if (targetElement) {
         targetElement.classList.remove('d-none');
         console.log(`Exibindo seção: ${id}`);
     } else {
-        console.error(`Erro: Elemento com ID '${id}' não encontrado ao tentar exibir.`);
+        console.error(`Erro: Elemento com ID '${id}' não encontrado.`);
         return;
     }
 
     if (id === 'registro') {
       carregarVeiculos();
-      // Garante que o canvas seja redimensionado e preparado ao entrar na tela de registro
-      // Chamada após o elemento estar visível para getBoundingClientRect() funcionar
-      // Adicionado um setTimeout para garantir que o elemento esteja renderizado
       setTimeout(() => {
           if (canvas && ctx) {
-              console.log('Chamando resizeCanvas e limparAssinatura para tela de registro após atraso.');
-              resizeCanvas(); // Força o redimensionamento e inicialização do canvas
-              limparAssinatura(); // Limpa a assinatura para um novo registro
-          } else {
-              console.error('Erro: Canvas ou contexto não disponível ao tentar mostrar a tela de registro após atraso. Verifique se o canvas existe no DOM e se o contexto 2D foi obtido.');
+              resizeCanvas();
+              limparAssinatura();
           }
-          // Limpa também os campos do checklist e observação ao entrar na tela de registro
-          document.getElementById('checkMacaco').checked = false;
-          document.getElementById('checkOleo').checked = false;
-          document.getElementById('checkStep').checked = false;
-          document.getElementById('checkAgua').checked = false;
-          document.getElementById('checkDocumento').checked = false;
-          document.getElementById('observacao').value = '';
-
-          // Log the state of responsavel and placaSelect after showing the section
-          const responsavelInput = document.getElementById('responsavel');
-          const placaSelect = document.getElementById('placaSelect');
-          if (responsavelInput) {
-              console.log('Responsável input found. OffsetWidth:', responsavelInput.offsetWidth, 'offsetHeight:', responsavelInput.offsetHeight);
-          } else {
-              console.error('Responsável input NOT found after showing registration section.');
-          }
-          if (placaSelect) {
-              console.log('Placa Select found. OffsetWidth:', placaSelect.offsetWidth, 'offsetHeight:', placaSelect.offsetHeight);
-          } else {
-              console.error('Placa Select NOT found after showing registration section.');
-          }
-
-      }, 100); // Pequeno atraso para garantir que o elemento esteja renderizado
+      }, 100);
     }
-    // Limpa os resultados da pesquisa e os registros filtrados ao mudar de tela
     if (id !== 'pesquisa') {
         document.getElementById('resultadoPesquisa').innerText = '';
         currentFilteredRecords = [];
@@ -403,6 +470,7 @@
     console.log('Voltando ao menu principal.');
   }
 
+  // Funções de Veículo
   function salvarVeiculo() {
     let novo = document.getElementById('novoVeiculo').value.trim();
     if (novo) {
@@ -436,93 +504,30 @@
     console.log('Veículos carregados no seletor.');
   }
 
-  // Declaração das variáveis globais para canvas e ctx
-  let canvas;
-  let ctx;
-  let desenhando = false;
-
-  // Garante que o canvas e o contexto sejam obtidos após o DOM estar pronto
-  document.addEventListener('DOMContentLoaded', () => {
-      canvas = document.getElementById('canvas');
-      if (canvas) {
-          ctx = canvas.getContext('2d');
-          if (ctx) {
-              console.log('Canvas e contexto 2D obtidos com sucesso em DOMContentLoaded.');
-              setupCanvasDrawing(); // Configura os estilos de desenho iniciais
-              resizeCanvas(); // Realiza o redimensionamento inicial
-          } else {
-              console.error('Falha ao obter o contexto 2D para o canvas. A assinatura não funcionará.');
-          }
-      } else {
-          console.error('Elemento canvas com ID "canvas" não encontrado em DOMContentLoaded. Verifique o ID no HTML.');
-      }
-
-      // Log the initial state of responsavel and placaSelect
-      const responsavelInput = document.getElementById('responsavel');
-      const placaSelect = document.getElementById('placaSelect');
-      if (responsavelInput) {
-          console.log('Initial Responsável input found. OffsetWidth:', responsavelInput.offsetWidth, 'offsetHeight:', responsavelInput.offsetHeight);
-      } else {
-          console.error('Initial Responsável input NOT found.');
-      }
-      if (placaSelect) {
-          console.log('Initial Placa Select found. OffsetWidth:', placaSelect.offsetWidth, 'offsetHeight:', placaSelect.offsetHeight);
-      } else {
-          console.error('Initial Placa Select NOT found.');
-      }
-  });
-
-  // --- Configuração de Desenho do Canvas e Manipuladores de Eventos ---
-
+  // Funções de Assinatura
   function setupCanvasDrawing() {
-    if (!ctx) {
-        console.error('Erro: Não foi possível obter o contexto 2D para o canvas em setupCanvasDrawing. A assinatura não funcionará.');
-        return;
-    }
+    if (!ctx) return;
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = '#000';
-    console.log('Estilos de desenho do canvas definidos (lineWidth, lineCap, lineJoin, strokeStyle).');
   }
 
-  // Adiciona listeners para garantir que o canvas seja redimensionado e preparado
-  // sempre que a janela é redimensionada.
-  window.addEventListener('resize', resizeCanvas);
-
   function resizeCanvas() {
-    if (!canvas || !ctx) {
-        console.warn('Canvas ou contexto não disponível para resizeCanvas. Ignorando redimensionamento.');
-        return;
-    }
+    if (!canvas || !ctx) return;
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-
-    console.log(`resizeCanvas: Dimensões CSS do canvas: width=${rect.width}px, height=${rect.height}px. Device Pixel Ratio (DPR)=${dpr}.`);
-
-    // Define as dimensões internas do buffer de desenho do canvas
-    // Usa as dimensões do CSS (rect.width/height) multiplicadas pelo DPR
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    console.log('Dimensões internas do canvas definidas para:', canvas.width, 'x', canvas.height, 'pixels.');
-
-    // Redefine a matriz de transformação antes de aplicar nova escala
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-    // Escala o contexto de desenho para corresponder ao DPR.
     ctx.scale(dpr, dpr);
-    console.log('Contexto do canvas escalado por:', dpr);
-
-    // Reaplica os estilos de desenho após o redimensionamento
     setupCanvasDrawing();
-    limparAssinatura(); // Limpa a assinatura para evitar problemas de redimensionamento
-    console.log('Canvas redimensionado e limpo.');
+    limparAssinatura();
   }
 
   function getCanvasCoords(e) {
     const rect = canvas.getBoundingClientRect();
     let clientX, clientY;
-
     if (e.touches && e.touches.length > 0) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
@@ -530,125 +535,47 @@
       clientX = e.clientX;
       clientY = e.clientY;
     }
-    
-    // As coordenadas agora são diretamente de clientX/Y menos o offset do canvas,
-    // já que ctx.scale lida com o DPR internamente para o desenho.
     return {
       x: (clientX - rect.left),
       y: (clientY - rect.top)
     };
   }
 
-  // Adiciona eventos apenas se o canvas e o contexto estiverem disponíveis
-  // Os listeners de evento são adicionados uma vez em DOMContentLoaded
-  document.addEventListener('DOMContentLoaded', () => {
-    if (canvas && ctx) {
-        // Eventos do Mouse
-        canvas.addEventListener('mousedown', e => {
-          desenhando = true;
-          const coords = getCanvasCoords(e);
-          ctx.beginPath();
-          ctx.moveTo(coords.x, coords.y);
-          console.log('Mouse down em:', coords.x, coords.y);
-        });
-
-        canvas.addEventListener('mousemove', e => {
-          if (!desenhando) return;
-          const coords = getCanvasCoords(e);
-          ctx.lineTo(coords.x, coords.y);
-          ctx.stroke();
-        });
-
-        canvas.addEventListener('mouseup', () => {
-          desenhando = false;
-          ctx.closePath();
-          console.log('Mouse up.');
-        });
-
-        canvas.addEventListener('mouseout', () => {
-          if (desenhando) {
-            desenhando = false;
-            ctx.closePath();
-            console.log('Mouse out, desenho parado.');
-          }
-        });
-
-        // Eventos de Toque
-        canvas.addEventListener('touchstart', e => {
-          e.preventDefault(); // Previne ações padrão como rolagem/zoom
-          desenhando = true;
-          const coords = getCanvasCoords(e);
-          ctx.beginPath();
-          ctx.moveTo(coords.x, coords.y);
-          console.log('Toque iniciado em:', coords.x, coords.y);
-        });
-
-        canvas.addEventListener('touchmove', e => {
-          e.preventDefault(); // Previne ações padrão
-          if (!desenhando) return;
-          const coords = getCanvasCoords(e);
-          ctx.lineTo(coords.x, coords.y);
-          ctx.stroke();
-        });
-
-        canvas.addEventListener('touchend', () => {
-          desenhando = false;
-          ctx.closePath();
-          console.log('Toque finalizado.');
-        });
-
-        canvas.addEventListener('touchcancel', () => {
-          if (desenhando) {
-            desenhando = false;
-            ctx.closePath();
-            console.log('Toque cancelado, desenho parado.');
-          }
-        });
-    }
-  });
-
-
   function limparAssinatura() {
-    if (!ctx) {
-        console.warn('Contexto não disponível para limparAssinatura. Ignorando.');
-        return;
-    }
+    if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    setupCanvasDrawing(); // Reaplica estilos após a limpeza
-    console.log('Assinatura limpa.');
+    setupCanvasDrawing();
   }
 
+  // Funções de Salvar Registro (migrada para Firebase)
+  async function salvarRegistro() {
+    if (!isAuthReady) {
+      showAlertModal("Aguarde", "Aguarde a conexão com o banco de dados.");
+      return;
+    }
 
-  function salvarRegistro() {
     const responsavel = document.getElementById('responsavel').value.trim();
     const placa = document.getElementById('placaSelect').value;
     const tipo = document.getElementById('tipoMovimento').value;
     const dataHora = document.getElementById('dataHora').value;
-
-    // Captura o estado do checklist
     const checkMacaco = document.getElementById('checkMacaco').checked;
     const checkOleo = document.getElementById('checkOleo').checked;
     const checkStep = document.getElementById('checkStep').checked;
     const checkAgua = document.getElementById('checkAgua').checked;
     const checkDocumento = document.getElementById('checkDocumento').checked;
     const observacao = document.getElementById('observacao').value.trim();
-    
-    // Verifica se o contexto do canvas está disponível antes de tentar obter a assinatura
     const assinatura = ctx ? canvas.toDataURL() : null;
 
     if (!responsavel || !placa || !dataHora) {
-      showAlertModal('Campos Ausentes', 'Por favor, preencha todos os campos obrigatórios (Responsável, Veículo, Data/Hora).');
+      showAlertModal('Campos Ausentes', 'Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-
-    // Cria um canvas temporário para comparar se a assinatura está em branco
-    // Assegura que as dimensões do canvas temporário correspondam às do canvas principal
+    
     const blankCanvas = document.createElement('canvas');
     blankCanvas.width = canvas.width;
     blankCanvas.height = canvas.height;
-    
     if (!ctx || assinatura === null || assinatura === blankCanvas.toDataURL()) {
-        showAlertModal('Assinatura Necessária', 'Por favor, adicione sua assinatura no campo designado.');
+        showAlertModal('Assinatura Necessária', 'Por favor, adicione sua assinatura.');
         return;
     }
 
@@ -656,7 +583,7 @@
       responsavel: responsavel,
       placa: placa,
       tipo: tipo,
-      dataHora: dataHora,
+      dataHora: Timestamp.fromDate(new Date(dataHora)), // Converte para o tipo do Firebase
       checkMacaco: checkMacaco,
       checkOleo: checkOleo,
       checkStep: checkStep,
@@ -666,33 +593,68 @@
       assinatura: assinatura
     };
     
-    let historico = JSON.parse(localStorage.getItem('historico') || '[]');
-    historico.push(registro);
-    localStorage.setItem('historico', JSON.stringify(historico));
-    showAlertModal('Sucesso', 'Registro salvo com sucesso!');
-    document.getElementById('responsavel').value = '';
-    document.getElementById('placaSelect').value = '';
-    document.getElementById('dataHora').value = '';
-    // Limpa os campos do checklist e observação após salvar
-    document.getElementById('checkMacaco').checked = false;
-    document.getElementById('checkOleo').checked = false;
-    document.getElementById('checkStep').checked = false;
-    document.getElementById('checkAgua').checked = false;
-    document.getElementById('checkDocumento').checked = false;
-    document.getElementById('observacao').value = '';
+    try {
+      const registrosCollection = collection(db, `artifacts/${appId}/users/${userId}/registros-veiculos`);
+      await addDoc(registrosCollection, registro);
+      showAlertModal('Sucesso', 'Registro salvo em nuvem com sucesso!');
+      
+      // Limpar formulário
+      document.getElementById('responsavel').value = '';
+      document.getElementById('placaSelect').value = '';
+      document.getElementById('dataHora').value = '';
+      document.getElementById('checkMacaco').checked = false;
+      document.getElementById('checkOleo').checked = false;
+      document.getElementById('checkStep').checked = false;
+      document.getElementById('checkAgua').checked = false;
+      document.getElementById('checkDocumento').checked = false;
+      document.getElementById('observacao').value = '';
+      limparAssinatura();
+      voltar();
+      
+      console.log('Registro salvo com sucesso no Firestore.');
+    } catch (e) {
+      console.error("Erro ao salvar no Firestore:", e);
+      showAlertModal("Erro", "Ocorreu um erro ao salvar o registro em nuvem.");
+    }
+  }
 
-    limparAssinatura();
-    voltar();
-    console.log('Registro salvo com sucesso.');
+  // Funções que usam o histórico do Firebase
+  function setupRealtimeListener() {
+    if (!db || !userId) {
+      console.log("Banco de dados ou userId não disponível para listener.");
+      return;
+    }
+    
+    // Caminho para a coleção de registros (privada para o usuário)
+    const registrosCollection = collection(db, `artifacts/${appId}/users/${userId}/registros-veiculos`);
+    const q = query(registrosCollection);
+
+    onSnapshot(q, (querySnapshot) => {
+      let tempHistorico = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        data.id = doc.id;
+        // Converte a data do Firebase para um formato usável
+        if (data.dataHora && data.dataHora.toDate) {
+            data.dataHora = data.dataHora.toDate();
+        }
+        tempHistorico.push(data);
+      });
+      // Sorteia os registros por dataHora (o Firebase não permite orderBy() sem índice)
+      historicoCompleto = tempHistorico.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+      console.log("Dados atualizados em tempo real do Firestore. Total de registros:", historicoCompleto.length);
+    }, (error) => {
+      console.error("Erro ao escutar dados do Firestore:", error);
+      showAlertModal("Erro de Sincronização", "Ocorreu um erro ao sincronizar os dados. Recarregue a página.");
+    });
   }
 
   function showHistorico() {
-    let h = JSON.parse(localStorage.getItem('historico') || '[]');
     let txt = '';
-    if (h.length === 0) {
-        txt = 'Nenhum registro.';
+    if (historicoCompleto.length === 0) {
+        txt = 'Nenhum registro encontrado.';
     } else {
-        h.forEach((r, i) => {
+        historicoCompleto.forEach((r, i) => {
             txt += `#${i + 1} - ${r.tipo} - ${new Date(r.dataHora).toLocaleString()}\n`;
             txt += `Responsável: ${r.responsavel}\nPlaca: ${r.placa}\n`;
             txt += `Checklist: Macaco(${r.checkMacaco ? 'Sim' : 'Não'}), Óleo(${r.checkOleo ? 'Sim' : 'Não'}), Estepe(${r.checkStep ? 'Sim' : 'Não'}), Água(${r.checkAgua ? 'Sim' : 'Não'}), Documento(${r.checkDocumento ? 'Sim' : 'Não'})\n`;
@@ -710,33 +672,23 @@
 
     if (!inicioStr || !fimStr) {
       showAlertModal('Campos Ausentes', 'Por favor, preencha as datas de início e fim para a pesquisa.');
-      console.warn('Campos de data da pesquisa vazios.');
       return;
     }
 
     let inicio = new Date(inicioStr);
-    inicio.setHours(0, 0, 0, 0);
-    let inicioTimestamp = inicio.getTime();
-
     let fim = new Date(fimStr);
     fim.setHours(23, 59, 59, 999);
-    let fimTimestamp = fim.getTime();
 
-    let h = JSON.parse(localStorage.getItem('historico') || '[]');
-    let resultado = '';
-
-    const filteredRecords = h.filter(r => {
+    const filteredRecords = historicoCompleto.filter(r => {
       const registroDate = new Date(r.dataHora);
-      const registroTimestamp = registroDate.getTime();
-      return registroTimestamp >= inicioTimestamp && registroTimestamp <= fimTimestamp;
+      return registroDate >= inicio && registroDate <= fim;
     });
 
-    // Armazena os registros filtrados na variável global para exportação
     currentFilteredRecords = filteredRecords;
 
+    let resultado = '';
     if (filteredRecords.length === 0) {
       resultado = 'Nenhum registro encontrado para o período selecionado.';
-      console.log('Nenhum registro encontrado para o período filtrado.');
     } else {
       filteredRecords.forEach((r, i) => {
         resultado += `#${i + 1} - ${r.tipo} - ${new Date(r.dataHora).toLocaleString()}\n`;
@@ -744,58 +696,45 @@
         resultado += `Checklist: Macaco(${r.checkMacaco ? 'Sim' : 'Não'}), Óleo(${r.checkOleo ? 'Sim' : 'Não'}), Estepe(${r.checkStep ? 'Sim' : 'Não'}), Água(${r.checkAgua ? 'Sim' : 'Não'}), Documento(${r.checkDocumento ? 'Sim' : 'Não'})\n`;
         resultado += `Observação: ${r.observacao || 'N/A'}\n---\n`;
       });
-      console.log(`${filteredRecords.length} registros encontrados para o período filtrado.`);
     }
     document.getElementById('resultadoPesquisa').innerText = resultado;
   }
 
-  // --- Funções de Exportação ---
-
-  function exportToPdf() {
-    const historico = JSON.parse(localStorage.getItem('historico') || '[]');
-    if (historico.length === 0) {
+  // Funções de Exportação (agora usam o histórico do Firebase)
+  async function exportToPdf() {
+    if (historicoCompleto.length === 0) {
       showAlertModal('Exportação', 'Nenhum registro para exportar para PDF.');
-      console.warn('Tentativa de exportar PDF com histórico vazio.');
       return;
     }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-
     doc.setFontSize(18);
     doc.text("Histórico Completo de Movimentação de Veículos - Japan Security Car", 14, 22);
 
     const tableColumn = ["#", "Tipo", "Data/Hora", "Responsável", "Placa", "Macaco", "Óleo", "Estepe", "Água", "Documento", "Observação"];
-    const tableRows = [];
+    const tableRows = historicoCompleto.map((record, index) => [
+      index + 1,
+      record.tipo,
+      new Date(record.dataHora).toLocaleString(),
+      record.responsavel,
+      record.placa,
+      record.checkMacaco ? 'Sim' : 'Não',
+      record.checkOleo ? 'Sim' : 'Não',
+      record.checkStep ? 'Sim' : 'Não',
+      record.checkAgua ? 'Sim' : 'Não',
+      record.checkDocumento ? 'Sim' : 'Não',
+      record.observacao || 'N/A'
+    ]);
 
-    historico.forEach((record, index) => {
-      const recordData = [
-        index + 1,
-        record.tipo,
-        new Date(record.dataHora).toLocaleString(),
-        record.responsavel,
-        record.placa,
-        record.checkMacaco ? 'Sim' : 'Não',
-        record.checkOleo ? 'Sim' : 'Não',
-        record.checkStep ? 'Sim' : 'Não',
-        record.checkAgua ? 'Sim' : 'Não',
-        record.checkDocumento ? 'Sim' : 'Não',
-        record.observacao || 'N/A'
-      ];
-      tableRows.push(recordData);
-    });
-
-    doc.autoTable(tableColumn, tableRows, { startY: 30 });
+    doc.autoTable({ head: [tableColumn], body: tableRows, startY: 30 });
     doc.save('historico_veiculos_completo.pdf');
     showAlertModal('Exportação', 'Histórico completo exportado para PDF com sucesso!');
-    console.log('Histórico completo exportado para PDF.');
   }
 
-  function exportToExcel() {
-    const historico = JSON.parse(localStorage.getItem('historico') || '[]');
-    if (historico.length === 0) {
+  async function exportToExcel() {
+    if (historicoCompleto.length === 0) {
       showAlertModal('Exportação', 'Nenhum registro para exportar para Excel.');
-      console.warn('Tentativa de exportar Excel com histórico vazio.');
       return;
     }
 
@@ -803,7 +742,7 @@
       ["#", "Tipo", "Data/Hora", "Responsável", "Placa", "Macaco", "Óleo", "Estepe", "Água", "Documento", "Observação"]
     ];
 
-    historico.forEach((record, index) => {
+    historicoCompleto.forEach((record, index) => {
       ws_data.push([
         index + 1,
         record.tipo,
@@ -822,30 +761,23 @@
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Histórico");
-
     XLSX.writeFile(wb, "historico_veiculos_completo.xlsx");
     showAlertModal('Exportação', 'Histórico completo exportado para Excel com sucesso!');
-    console.log('Histórico completo exportado para Excel.');
   }
 
-  function exportFilteredToPdf() {
+  async function exportFilteredToPdf() {
     if (currentFilteredRecords.length === 0) {
-      showAlertModal('Exportação', 'Nenhum registro filtrado para exportar para PDF. Realize uma pesquisa primeiro.');
-      console.warn('Tentativa de exportar PDF filtrado sem registros.');
+      showAlertModal('Exportação', 'Nenhum registro filtrado para exportar para PDF.');
       return;
     }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-
     doc.setFontSize(18);
     doc.text("Resultados da Pesquisa de Veículos - Japan Security Car", 14, 22);
 
     const tableColumn = ["#", "Tipo", "Data/Hora", "Responsável", "Placa", "Macaco", "Óleo", "Estepe", "Água", "Documento", "Observação"];
-    const tableRows = [];
-
-    currentFilteredRecords.forEach((record, index) => {
-      const recordData = [
+    const tableRows = currentFilteredRecords.map((record, index) => [
         index + 1,
         record.tipo,
         new Date(record.dataHora).toLocaleString(),
@@ -857,20 +789,16 @@
         record.checkAgua ? 'Sim' : 'Não',
         record.checkDocumento ? 'Sim' : 'Não',
         record.observacao || 'N/A'
-      ];
-      tableRows.push(recordData);
-    });
+    ]);
 
-    doc.autoTable(tableColumn, tableRows, { startY: 30 });
+    doc.autoTable({ head: [tableColumn], body: tableRows, startY: 30 });
     doc.save('pesquisa_veiculos.pdf');
     showAlertModal('Exportação', 'Resultados da pesquisa exportados para PDF com sucesso!');
-    console.log('Resultados da pesquisa exportados para PDF.');
   }
 
-  function exportFilteredToExcel() {
+  async function exportFilteredToExcel() {
     if (currentFilteredRecords.length === 0) {
-      showAlertModal('Exportação', 'Nenhum registro filtrado para exportar para Excel. Realize uma pesquisa primeiro.');
-      console.warn('Tentativa de exportar Excel filtrado sem registros.');
+      showAlertModal('Exportação', 'Nenhum registro filtrado para exportar para Excel.');
       return;
     }
 
@@ -897,25 +825,105 @@
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Pesquisa");
-
     XLSX.writeFile(wb, "pesquisa_veiculos.xlsx");
     showAlertModal('Exportação', 'Resultados da pesquisa exportados para Excel com sucesso!');
-    console.log('Resultados da pesquisa exportados para Excel.');
   }
 
-  // --- Registro do Service Worker ---
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(reg => {
-          console.log('Service Worker registrado com sucesso:', reg);
-        })
-        .catch(err => {
-          console.error('Falha no registro do Service Worker:', err);
-        });
-    });
-  }
+  // Event Listeners adicionados para resolver o erro
+  document.addEventListener('DOMContentLoaded', () => {
+    // Eventos do Canvas
+    canvas = document.getElementById('canvas');
+    if (canvas) {
+        ctx = canvas.getContext('2d');
+        if (ctx) {
+            setupCanvasDrawing();
+            resizeCanvas();
+
+            canvas.addEventListener('mousedown', e => {
+              desenhando = true;
+              const coords = getCanvasCoords(e);
+              ctx.beginPath();
+              ctx.moveTo(coords.x, coords.y);
+            });
+
+            canvas.addEventListener('mousemove', e => {
+              if (!desenhando) return;
+              const coords = getCanvasCoords(e);
+              ctx.lineTo(coords.x, coords.y);
+              ctx.stroke();
+            });
+
+            canvas.addEventListener('mouseup', () => {
+              desenhando = false;
+              ctx.closePath();
+            });
+
+            canvas.addEventListener('mouseout', () => {
+              if (desenhando) {
+                desenhando = false;
+                ctx.closePath();
+              }
+            });
+
+            canvas.addEventListener('touchstart', e => {
+              e.preventDefault();
+              desenhando = true;
+              const coords = getCanvasCoords(e);
+              ctx.beginPath();
+              ctx.moveTo(coords.x, coords.y);
+            });
+
+            canvas.addEventListener('touchmove', e => {
+              e.preventDefault();
+              if (!desenhando) return;
+              const coords = getCanvasCoords(e);
+              ctx.lineTo(coords.x, coords.y);
+              ctx.stroke();
+            });
+
+            canvas.addEventListener('touchend', () => {
+              desenhando = false;
+              ctx.closePath();
+            });
+
+            canvas.addEventListener('touchcancel', () => {
+              if (desenhando) {
+                desenhando = false;
+                ctx.closePath();
+              }
+            });
+        }
+    }
+    
+    // Adiciona event listeners a todos os botões
+    document.getElementById('loginBtn')?.addEventListener('click', login);
+    document.getElementById('showCadastroBtn')?.addEventListener('click', () => show('cadastroVeiculo'));
+    document.getElementById('showRegistroBtn')?.addEventListener('click', () => show('registro'));
+    document.getElementById('showPesquisaBtn')?.addEventListener('click', () => show('pesquisa'));
+    document.getElementById('showHistoricoBtn')?.addEventListener('click', showHistorico);
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('salvarVeiculoBtn')?.addEventListener('click', salvarVeiculo);
+    document.getElementById('voltarFromCadastroBtn')?.addEventListener('click', voltar);
+    document.getElementById('limparAssinaturaBtn')?.addEventListener('click', limparAssinatura);
+    document.getElementById('salvarRegistroBtn')?.addEventListener('click', salvarRegistro);
+    document.getElementById('voltarFromRegistroBtn')?.addEventListener('click', voltar);
+    document.getElementById('filtrarBtn')?.addEventListener('click', filtrarPorData);
+    document.getElementById('exportFilteredPdfBtn')?.addEventListener('click', exportFilteredToPdf);
+    document.getElementById('exportFilteredExcelBtn')?.addEventListener('click', exportFilteredToExcel);
+    document.getElementById('voltarFromPesquisaBtn')?.addEventListener('click', voltar);
+    document.getElementById('exportPdfBtn')?.addEventListener('click', exportToPdf);
+    document.getElementById('exportExcelBtn')?.addEventListener('click', exportToExcel);
+    document.getElementById('voltarFromHistoricoBtn')?.addEventListener('click', voltar);
+    document.getElementById('closeAlertBtn')?.addEventListener('click', hideAlertModal);
+    document.getElementById('okAlertBtn')?.addEventListener('click', hideAlertModal);
+  });
+  
+  window.addEventListener('resize', resizeCanvas);
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 </body>
 </html>
