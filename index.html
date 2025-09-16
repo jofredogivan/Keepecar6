@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -190,7 +191,7 @@
         width: 100%;
         height: 100%;
         background-color: rgba(255, 255, 255, 0.8);
-        display: flex;
+        display: none;
         justify-content: center;
         align-items: center;
         z-index: 9999;
@@ -209,26 +210,18 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-
-    .user-info {
-        font-size: 0.75rem;
-        color: #6c757d;
-        text-align: center;
-        margin-top: 1rem;
-        word-break: break-all;
-    }
   </style>
 </head>
 <body>
 
-<div class="loading-overlay d-none" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
 </div>
 
 <div class="container py-5">
   <h2 class="text-center mb-5">🚗 Japan Security Car</h2>
 
-  <div id="login" class="card card-custom p-4 d-none">
+  <div id="login" class="card card-custom p-4">
     <h4 class="mb-3">🔒 Login de Acesso</h4>
     <input type="text" id="user" class="form-control mb-3" placeholder="Usuário">
     <input type="password" id="pass" class="form-control mb-3" placeholder="Senha">
@@ -243,9 +236,6 @@
       <button class="btn btn-outline-info" id="showPesquisaBtn">Pesquisar por Data</button>
       <button class="btn btn-outline-secondary" id="showHistoricoBtn">Ver Histórico Completo</button>
       <button class="btn btn-outline-danger" id="logoutBtn">Sair</button>
-    </div>
-    <div class="user-info mt-3">
-        Seu ID de usuário: <br> <span id="userIdDisplay"></span>
     </div>
   </div>
 
@@ -335,86 +325,29 @@
   </div>
 </div>
 
-<!-- Firebase SDKs -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, where, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-  // Variáveis globais de ambiente
-  const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-  const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-  // Variáveis globais para o Firebase
-  let app;
-  let db;
-  let auth;
-  let userId = null;
-  let isAuthReady = false;
+<script>
   let historicoCompleto = [];
   let currentFilteredRecords = [];
 
-  // Variáveis para o canvas
   let canvas;
   let ctx;
   let desenhando = false;
 
-  // Inicializa o Firebase e adiciona event listeners
   window.onload = function() {
-    console.log("Variável __firebase_config fornecida:", typeof __firebase_config !== 'undefined' ? "Sim" : "Não");
-    console.log("Configuração do Firebase recebida:", firebaseConfig);
-    console.log("Token de autenticação inicial fornecido:", typeof __initial_auth_token !== 'undefined' ? "Sim" : "Não");
-
-    // Adiciona uma verificação para garantir que a configuração não esteja vazia
-    if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
-      showAlertModal("Erro de Conexão", "A configuração do Firebase não foi fornecida. Por favor, verifique a sua plataforma.");
-      showLoading(false);
-      return;
-    }
-
-    try {
-      showLoading(true);
-      app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-      auth = getAuth(app);
-      console.log("Firebase inicializado com sucesso.");
-      
-      // Monitora o estado da autenticação
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          userId = user.uid;
-          isAuthReady = true;
-          document.getElementById('userIdDisplay').innerText = userId;
-          console.log("Usuário autenticado:", userId);
-          // Inicia a escuta em tempo real dos registros
-          setupRealtimeListener();
-        } else {
-          // Tenta logar anonimamente ou com o token
-          if (initialAuthToken) {
-            await signInWithCustomToken(auth, initialAuthToken);
-            console.log("Login com token personalizado.");
-          } else {
-            await signInAnonymously(auth);
-            console.log("Login anônimo.");
-          }
+    console.log("Aplicação iniciada.");
+    show('login');
+    // Carregar dados existentes do localStorage
+    historicoCompleto = JSON.parse(localStorage.getItem('registros') || '[]').map(r => {
+        // As datas salvas como string precisam ser convertidas de volta
+        if (typeof r.dataHora === 'string') {
+            r.dataHora = new Date(r.dataHora);
         }
-        // Esconde o carregamento e mostra a tela de login após a autenticação ser resolvida
-        showLoading(false);
-        document.getElementById('login').classList.remove('d-none');
-      });
-    } catch (e) {
-      console.error("Erro ao inicializar Firebase:", e);
-      showAlertModal("Erro de Conexão", "Não foi possível conectar ao banco de dados. Verifique sua conexão e tente novamente.");
-      showLoading(false);
-    }
+        return r;
+    }).sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+    console.log(`Carregados ${historicoCompleto.length} registros do localStorage.`);
   };
 
   // Funções de UI
-  function showLoading(show) {
-    document.getElementById('loadingOverlay').classList.toggle('d-none', !show);
-  }
-
   function showAlertModal(title, message) {
     document.getElementById('alertModalTitle').innerText = title;
     document.getElementById('alertModalMessage').innerText = message;
@@ -443,14 +376,14 @@
     }
   }
 
-  function logout() { 
-    location.reload(); 
+  function logout() {
+    location.reload();
     console.log('Logout realizado.');
   }
 
   function show(id) {
-    ['menu', 'cadastroVeiculo', 'registro', 'historico', 'pesquisa'].forEach(e => document.getElementById(e).classList.add('d-none'));
-    
+    ['login', 'menu', 'cadastroVeiculo', 'registro', 'historico', 'pesquisa'].forEach(e => document.getElementById(e).classList.add('d-none'));
+
     const targetElement = document.getElementById(id);
     if (targetElement) {
         targetElement.classList.remove('d-none');
@@ -476,8 +409,8 @@
     }
   }
 
-  function voltar() { 
-    show('menu'); 
+  function voltar() {
+    show('menu');
     console.log('Voltando ao menu principal.');
   }
 
@@ -558,17 +491,12 @@
     setupCanvasDrawing();
   }
 
-  // Funções de Salvar Registro (migrada para Firebase)
-  async function salvarRegistro() {
-    if (!isAuthReady) {
-      showAlertModal("Aguarde", "Aguarde a conexão com o banco de dados.");
-      return;
-    }
-
+  // Funções de Salvar Registro (agora usam localStorage)
+  function salvarRegistro() {
     const responsavel = document.getElementById('responsavel').value.trim();
     const placa = document.getElementById('placaSelect').value;
     const tipo = document.getElementById('tipoMovimento').value;
-    const dataHora = document.getElementById('dataHora').value;
+    const dataHoraStr = document.getElementById('dataHora').value;
     const checkMacaco = document.getElementById('checkMacaco').checked;
     const checkOleo = document.getElementById('checkOleo').checked;
     const checkStep = document.getElementById('checkStep').checked;
@@ -577,11 +505,11 @@
     const observacao = document.getElementById('observacao').value.trim();
     const assinatura = ctx ? canvas.toDataURL() : null;
 
-    if (!responsavel || !placa || !dataHora) {
+    if (!responsavel || !placa || !dataHoraStr) {
       showAlertModal('Campos Ausentes', 'Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-    
+
     const blankCanvas = document.createElement('canvas');
     blankCanvas.width = canvas.width;
     blankCanvas.height = canvas.height;
@@ -594,7 +522,7 @@
       responsavel: responsavel,
       placa: placa,
       tipo: tipo,
-      dataHora: Timestamp.fromDate(new Date(dataHora)), // Converte para o tipo do Firebase
+      dataHora: new Date(dataHoraStr),
       checkMacaco: checkMacaco,
       checkOleo: checkOleo,
       checkStep: checkStep,
@@ -603,61 +531,25 @@
       observacao: observacao,
       assinatura: assinatura
     };
-    
-    try {
-      const registrosCollection = collection(db, `artifacts/${appId}/users/${userId}/registros-veiculos`);
-      await addDoc(registrosCollection, registro);
-      showAlertModal('Sucesso', 'Registro salvo em nuvem com sucesso!');
-      
-      // Limpar formulário
-      document.getElementById('responsavel').value = '';
-      document.getElementById('placaSelect').value = '';
-      document.getElementById('dataHora').value = '';
-      document.getElementById('checkMacaco').checked = false;
-      document.getElementById('checkOleo').checked = false;
-      document.getElementById('checkStep').checked = false;
-      document.getElementById('checkAgua').checked = false;
-      document.getElementById('checkDocumento').checked = false;
-      document.getElementById('observacao').value = '';
-      limparAssinatura();
-      voltar();
-      
-      console.log('Registro salvo com sucesso no Firestore.');
-    } catch (e) {
-      console.error("Erro ao salvar no Firestore:", e);
-      showAlertModal("Erro", "Ocorreu um erro ao salvar o registro em nuvem.");
-    }
-  }
 
-  // Funções que usam o histórico do Firebase
-  function setupRealtimeListener() {
-    if (!db || !userId) {
-      console.log("Banco de dados ou userId não disponível para listener.");
-      return;
-    }
-    
-    // Caminho para a coleção de registros (privada para o usuário)
-    const registrosCollection = collection(db, `artifacts/${appId}/users/${userId}/registros-veiculos`);
-    const q = query(registrosCollection);
+    historicoCompleto.push(registro);
+    // Salva o array completo no localStorage
+    localStorage.setItem('registros', JSON.stringify(historicoCompleto));
+    showAlertModal('Sucesso', 'Registro salvo localmente com sucesso!');
 
-    onSnapshot(q, (querySnapshot) => {
-      let tempHistorico = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        data.id = doc.id;
-        // Converte a data do Firebase para um formato usável
-        if (data.dataHora && data.dataHora.toDate) {
-            data.dataHora = data.dataHora.toDate();
-        }
-        tempHistorico.push(data);
-      });
-      // Sorteia os registros por dataHora (o Firebase não permite orderBy() sem índice)
-      historicoCompleto = tempHistorico.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
-      console.log("Dados atualizados em tempo real do Firestore. Total de registros:", historicoCompleto.length);
-    }, (error) => {
-      console.error("Erro ao escutar dados do Firestore:", error);
-      showAlertModal("Erro de Sincronização", "Ocorreu um erro ao sincronizar os dados. Recarregue a página.");
-    });
+    // Limpar formulário
+    document.getElementById('responsavel').value = '';
+    document.getElementById('placaSelect').value = '';
+    document.getElementById('dataHora').value = '';
+    document.getElementById('checkMacaco').checked = false;
+    document.getElementById('checkOleo').checked = false;
+    document.getElementById('checkStep').checked = false;
+    document.getElementById('checkAgua').checked = false;
+    document.getElementById('checkDocumento').checked = false;
+    document.getElementById('observacao').value = '';
+    limparAssinatura();
+    voltar();
+    console.log('Registro salvo com sucesso no localStorage.');
   }
 
   function showHistorico() {
@@ -665,6 +557,7 @@
     if (historicoCompleto.length === 0) {
         txt = 'Nenhum registro encontrado.';
     } else {
+        historicoCompleto.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
         historicoCompleto.forEach((r, i) => {
             txt += `#${i + 1} - ${r.tipo} - ${new Date(r.dataHora).toLocaleString()}\n`;
             txt += `Responsável: ${r.responsavel}\nPlaca: ${r.placa}\n`;
@@ -711,7 +604,7 @@
     document.getElementById('resultadoPesquisa').innerText = resultado;
   }
 
-  // Funções de Exportação (agora usam o histórico do Firebase)
+  // Funções de Exportação (agora usam o localStorage)
   async function exportToPdf() {
     if (historicoCompleto.length === 0) {
       showAlertModal('Exportação', 'Nenhum registro para exportar para PDF.');
@@ -840,9 +733,7 @@
     showAlertModal('Exportação', 'Resultados da pesquisa exportados para Excel com sucesso!');
   }
 
-  // Event Listeners adicionados para resolver o erro
   document.addEventListener('DOMContentLoaded', () => {
-    // Eventos do Canvas
     canvas = document.getElementById('canvas');
     if (canvas) {
         ctx = canvas.getContext('2d');
@@ -865,16 +756,16 @@
             });
 
             canvas.addEventListener('mouseup', () => {
-        desenhando = false;
-        ctx.closePath();
-      });
+              desenhando = false;
+              ctx.closePath();
+            });
 
             canvas.addEventListener('mouseout', () => {
-        if (desenhando) {
-          desenhando = false;
-          ctx.closePath();
-        }
-      });
+              if (desenhando) {
+                desenhando = false;
+                ctx.closePath();
+              }
+            });
 
             canvas.addEventListener('touchstart', e => {
               e.preventDefault();
@@ -906,7 +797,6 @@
         }
     }
     
-    // Adiciona event listeners a todos os botões
     document.getElementById('loginBtn')?.addEventListener('click', login);
     document.getElementById('showCadastroBtn')?.addEventListener('click', () => show('cadastroVeiculo'));
     document.getElementById('showRegistroBtn')?.addEventListener('click', () => show('registro'));
