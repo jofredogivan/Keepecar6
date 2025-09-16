@@ -362,12 +362,22 @@
 
   // Inicializa o Firebase e adiciona event listeners
   window.onload = function() {
+    console.log("Variável __firebase_config:", typeof __firebase_config !== 'undefined' ? __firebase_config : "Não fornecida");
+    console.log("Objeto firebaseConfig:", firebaseConfig);
+
+    // Adiciona uma verificação para garantir que a configuração não esteja vazia
+    if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
+      showAlertModal("Erro de Conexão", "A configuração do Firebase não foi fornecida. Por favor, verifique a sua plataforma.");
+      showLoading(false);
+      return;
+    }
+
     try {
       showLoading(true);
       app = initializeApp(firebaseConfig);
       db = getFirestore(app);
       auth = getAuth(app);
-      console.log("Firebase inicializado.");
+      console.log("Firebase inicializado com sucesso.");
       
       // Monitora o estado da autenticação
       onAuthStateChanged(auth, async (user) => {
