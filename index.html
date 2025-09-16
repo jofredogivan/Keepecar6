@@ -362,8 +362,9 @@
 
   // Inicializa o Firebase e adiciona event listeners
   window.onload = function() {
-    console.log("Variável __firebase_config:", typeof __firebase_config !== 'undefined' ? __firebase_config : "Não fornecida");
-    console.log("Objeto firebaseConfig:", firebaseConfig);
+    console.log("Variável __firebase_config fornecida:", typeof __firebase_config !== 'undefined' ? "Sim" : "Não");
+    console.log("Configuração do Firebase recebida:", firebaseConfig);
+    console.log("Token de autenticação inicial fornecido:", typeof __initial_auth_token !== 'undefined' ? "Sim" : "Não");
 
     // Adiciona uma verificação para garantir que a configuração não esteja vazia
     if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
@@ -864,16 +865,16 @@
             });
 
             canvas.addEventListener('mouseup', () => {
-              desenhando = false;
-              ctx.closePath();
-            });
+        desenhando = false;
+        ctx.closePath();
+      });
 
             canvas.addEventListener('mouseout', () => {
-              if (desenhando) {
-                desenhando = false;
-                ctx.closePath();
-              }
-            });
+        if (desenhando) {
+          desenhando = false;
+          ctx.closePath();
+        }
+      });
 
             canvas.addEventListener('touchstart', e => {
               e.preventDefault();
