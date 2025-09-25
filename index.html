@@ -297,8 +297,13 @@
     <div id="cadastroVeiculo" class="card card-custom d-none">
         <h4 class="mb-3"><i class="fas fa-car-alt"></i> Cadastro de Veículos</h4>
         <input type="text" id="novoVeiculo" class="form-control mb-3" placeholder="Placa do Veículo">
-        <button class="btn btn-primary w-100 mb-2" id="salvarVeiculoBtn"><i class="fas fa-save"></i> Salvar Veículo</button>
-        <button class="btn btn-secondary w-100" id="voltarFromCadastroBtn"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <button class="btn btn-primary w-100 mb-4" id="salvarVeiculoBtn"><i class="fas fa-save"></i> Salvar Veículo</button>
+        <h5 class="mb-3 mt-4"><i class="fas fa-trash-alt"></i> Excluir Veículo</h5>
+        <select id="placaExcluirSelect" class="form-select mb-3">
+            <option value="">Selecione para Excluir</option>
+        </select>
+        <button class="btn btn-outline-danger w-100" id="excluirVeiculoBtn"><i class="fas fa-trash-alt"></i> Excluir Veículo Selecionado</button>
+        <button class="btn btn-secondary w-100 mt-4" id="voltarFromCadastroBtn"><i class="fas fa-arrow-left"></i> Voltar</button>
     </div>
 
     <div id="registro" class="card card-custom d-none">
@@ -360,7 +365,8 @@
 
     <div id="historico" class="card card-custom d-none">
         <h4 class="mb-3"><i class="fas fa-book"></i> Histórico Completo</h4>
-        <pre id="historicoContent"></pre>
+        <div id="historicoContent" class="list-group">
+        </div>
         <div class="d-grid mt-3">
             <button class="btn btn-info" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Exportar para PDF</button>
             <button class="btn btn-success" id="exportExcelBtn"><i class="fas fa-file-excel"></i> Exportar para Excel</button>
@@ -375,6 +381,17 @@
         <h5 id="alertModalTitle"></h5>
         <p id="alertModalMessage"></p>
         <button class="btn btn-primary" id="okAlertBtn">OK</button>
+    </div>
+</div>
+
+<div id="customConfirmModal" class="custom-modal-overlay d-none">
+    <div class="custom-modal-content">
+        <h5 id="confirmModalTitle"></h5>
+        <p id="confirmModalMessage"></p>
+        <div class="d-flex justify-content-around">
+            <button class="btn btn-secondary" id="cancelConfirmBtn">Cancelar</button>
+            <button class="btn btn-danger" id="okConfirmBtn">Confirmar</button>
+        </div>
     </div>
 </div>
 
@@ -436,6 +453,20 @@
             };
         });
     }
+    
+    async function deleteRecord(storeName, key) {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([storeName], "readwrite");
+            const store = transaction.objectStore(storeName);
+            const request = store.delete(key);
+
+            request.onsuccess = () => resolve(true);
+            request.onerror = (event) => {
+                console.error(`Erro ao excluir registro em ${storeName}:`, event.target.error);
+                reject(event.target.error);
+            };
+        });
+    }
 
     async function getAllRecords(storeName) {
         return new Promise((resolve, reject) => {
@@ -470,6 +501,35 @@
 
     function hideAlertModal() {
         document.getElementById('customAlertModal').classList.add('d-none');
+    }
+
+    function showConfirmModal(title, message) {
+        return new Promise((resolve) => {
+            document.getElementById('confirmModalTitle').innerText = title;
+            document.getElementById('confirmModalMessage').innerText = message;
+            const confirmModal = document.getElementById('customConfirmModal');
+            confirmModal.classList.remove('d-none');
+
+            const okBtn = document.getElementById('okConfirmBtn');
+            const cancelBtn = document.getElementById('cancelConfirmBtn');
+
+            const handleOk = () => {
+                confirmModal.classList.add('d-none');
+                okBtn.removeEventListener('click', handleOk);
+                cancelBtn.removeEventListener('click', handleCancel);
+                resolve(true);
+            };
+
+            const handleCancel = () => {
+                confirmModal.classList.add('d-none');
+                okBtn.removeEventListener('click', handleOk);
+                cancelBtn.removeEventListener('click', handleCancel);
+                resolve(false);
+            };
+
+            okBtn.addEventListener('click', handleOk);
+            cancelBtn.addEventListener('click', handleCancel);
+        });
     }
 
     function login() {
@@ -511,6 +571,9 @@
                 }
             }, 100);
         }
+        if (id === 'cadastroVeiculo') {
+            carregarVeiculosParaExclusao();
+        }
         if (id !== 'pesquisa') {
             document.getElementById('resultadoPesquisa').innerText = '';
             currentFilteredRecords = [];
@@ -525,12 +588,14 @@
     async function salvarVeiculo() {
         const novo = document.getElementById('novoVeiculo').value.trim();
         if (novo) {
+            veiculos = (await getAllRecords('veiculos')).map(v => v.placa);
             if (!veiculos.includes(novo)) {
                 try {
                     await addRecord('veiculos', { placa: novo });
-                    veiculos.push(novo);
                     showAlertModal('Sucesso', 'Veículo cadastrado com sucesso!');
                     document.getElementById('novoVeiculo').value = '';
+                    carregarVeiculos();
+                    carregarVeiculosParaExclusao();
                 } catch (e) {
                     showAlertModal('Erro', 'Ocorreu um erro ao salvar o veículo.');
                 }
@@ -545,13 +610,50 @@
     async function carregarVeiculos() {
         const select = document.getElementById('placaSelect');
         select.innerHTML = '<option value="">Selecione o Veículo</option>';
-        veiculos = (await getAllRecords('veiculos')).map(v => v.placa);
+        const veiculosSalvos = await getAllRecords('veiculos');
+        veiculos = veiculosSalvos.map(v => v.placa);
         veiculos.forEach(v => {
             const opt = document.createElement('option');
             opt.value = v;
             opt.textContent = v;
             select.appendChild(opt);
         });
+    }
+
+    async function carregarVeiculosParaExclusao() {
+        const select = document.getElementById('placaExcluirSelect');
+        select.innerHTML = '<option value="">Selecione para Excluir</option>';
+        const veiculosSalvos = await getAllRecords('veiculos');
+        veiculosSalvos.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.placa;
+            opt.textContent = v.placa;
+            select.appendChild(opt);
+        });
+    }
+
+    async function excluirVeiculo() {
+        const placa = document.getElementById('placaExcluirSelect').value;
+        if (!placa) {
+            showAlertModal('Atenção', 'Por favor, selecione um veículo para excluir.');
+            return;
+        }
+
+        const confirmacao = await showConfirmModal('Confirmar Exclusão', `Tem certeza que deseja excluir o veículo de placa "${placa}"? Esta ação é irreversível.`);
+        if (!confirmacao) {
+            return;
+        }
+
+        try {
+            await deleteRecord('veiculos', placa);
+            showAlertModal('Sucesso', `O veículo "${placa}" foi excluído com sucesso.`);
+            carregarVeiculos();
+            carregarVeiculosParaExclusao();
+            document.getElementById('placaExcluirSelect').value = '';
+        } catch (e) {
+            showAlertModal('Erro', 'Ocorreu um erro ao excluir o veículo.');
+            console.error(e);
+        }
     }
 
     // --- Funções de Assinatura ---
@@ -641,10 +743,8 @@
         showLoading();
         try {
             await addRecord('registros', registro);
-            historicoCompleto = (await getAllRecords('registros')).sort((a, b) => b.timestamp - a.timestamp);
             hideLoading();
             showAlertModal('Sucesso', 'Registro salvo localmente com sucesso!');
-            // Limpar formulário
             document.getElementById('responsavel').value = '';
             document.getElementById('placaSelect').value = '';
             document.getElementById('dataHora').value = '';
@@ -661,23 +761,56 @@
             showAlertModal('Erro', 'Ocorreu um erro ao salvar o registro. ' + e.message);
         }
     }
+    
+    async function excluirRegistro(id) {
+        const confirmacao = await showConfirmModal('Confirmar Exclusão', 'Tem certeza que deseja excluir este registro? Esta ação é irreversível.');
+        if (!confirmacao) {
+            return;
+        }
+
+        try {
+            await deleteRecord('registros', id);
+            showAlertModal('Sucesso', 'O registro foi excluído com sucesso.');
+            showHistorico();
+        } catch (e) {
+            showAlertModal('Erro', 'Ocorreu um erro ao excluir o registro.');
+            console.error(e);
+        }
+    }
+
 
     async function showHistorico() {
-        historicoCompleto = (await getAllRecords('registros')).sort((a, b) => b.timestamp - a.timestamp);
-        let txt = '';
-        if (historicoCompleto.length === 0) {
-            txt = 'Nenhum registro encontrado.';
+        const historicoContentDiv = document.getElementById('historicoContent');
+        historicoContentDiv.innerHTML = '';
+
+        const registros = (await getAllRecords('registros')).sort((a, b) => b.timestamp - a.timestamp);
+        
+        if (registros.length === 0) {
+            historicoContentDiv.innerHTML = '<p class="text-white-50 text-center">Nenhum registro encontrado.</p>';
         } else {
-            historicoCompleto.forEach((r, i) => {
+            registros.forEach((r, i) => {
                 const dataHora = r.timestamp ? new Date(r.timestamp).toLocaleString() : 'Data inválida';
-                txt += `#${i + 1} - ${r.tipo} - ${dataHora}\n`;
-                txt += `Responsável: ${r.responsavel}\nPlaca: ${r.placa}\n`;
-                txt += `Checklist: Macaco(${r.checkMacaco ? 'Sim' : 'Não'}), Óleo(${r.checkOleo ? 'Sim' : 'Não'}), Estepe(${r.checkStep ? 'Sim' : 'Não'}), Água(${r.checkAgua ? 'Sim' : 'Não'}), Documento(${r.checkDocumento ? 'Sim' : 'Não'})\n`;
-                txt += `Observação: ${r.observacao || 'N/A'}\n---\n`;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'list-group-item bg-dark text-white border-secondary mb-3 rounded';
+                itemDiv.innerHTML = `
+                    <h5 class="mb-2">Registro #${i + 1}</h5>
+                    <p class="mb-1"><strong>Tipo:</strong> ${r.tipo} - <strong>Data/Hora:</strong> ${dataHora}</p>
+                    <p class="mb-1"><strong>Responsável:</strong> ${r.responsavel}</p>
+                    <p class="mb-1"><strong>Placa:</strong> ${r.placa}</p>
+                    <p class="mb-1"><strong>Observação:</strong> ${r.observacao || 'N/A'}</p>
+                    <button class="btn btn-sm btn-outline-danger mt-3 excluir-registro-btn" data-id="${r.id}"><i class="fas fa-trash-alt"></i> Excluir</button>
+                `;
+                historicoContentDiv.appendChild(itemDiv);
             });
         }
-        document.getElementById('historicoContent').innerText = txt;
         show('historico');
+        
+        document.querySelectorAll('.excluir-registro-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const id = parseInt(event.target.dataset.id, 10);
+                excluirRegistro(id);
+            });
+        });
     }
 
     async function filtrarPorData() {
@@ -851,7 +984,6 @@
         
         try {
             await openDatabase();
-            // Carrega todos os dados ao iniciar
             veiculos = (await getAllRecords('veiculos')).map(v => v.placa);
             historicoCompleto = (await getAllRecords('registros')).sort((a, b) => b.timestamp - a.timestamp);
         } catch (e) {
@@ -937,6 +1069,7 @@
         document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
         document.getElementById('exportFilteredPdfBtn').addEventListener('click', exportFilteredToPdf);
         document.getElementById('exportFilteredExcelBtn').addEventListener('click', exportFilteredToExcel);
+        document.getElementById('excluirVeiculoBtn').addEventListener('click', excluirVeiculo);
     });
 </script>
 </body>
